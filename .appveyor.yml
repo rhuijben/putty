@@ -1,0 +1,41 @@
+version: "{branch}-ci-{build}"
+image: Visual Studio 2015
+
+branches:
+  only:
+  - master
+
+platform:
+  - x86
+  - x64
+  - arm
+
+environment:
+  matrix:
+  - build: msvc
+  - build: clang
+  - build: gcc
+  
+matrix:
+  exclude:
+    - build: gcc
+      platform: arm
+
+before_build:
+- if "%platform%"=="arm" (call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_arm) else (call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %platform%)
+- set PATH=%PATH%;C:\Perl;C:\Program Files\LLVM\bin;C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;
+# Convert to lowercase
+- if "%platform%"=="X64" set platform=x64
+- if "%platform%"=="ARM" set platform=arm
+- set PUTTY_TESTCRYPT=%APPVEYOR_BUILD_FOLDER%\windows\testcrypt.exe
+
+build_script:
+- perl ./mkfiles.pl
+- cd windows
+- if "%build%"=="msvc" nmake -f Makefile.vc
+- if "%build%"=="clang" C:\MinGW\bin\mingw32-make -f Makefile.clangcl Platform="%Platform%"
+- if "%build%"=="gcc" C:\MinGW\bin\mingw32-make -f Makefile.mgw Platform="%Platform%"
+
+test_script:
+- dir *.exe
+- if not "%platform%"=="arm" python ../test/cryptsuite.py

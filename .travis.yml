@@ -1,0 +1,55 @@
+notifications:
+  email: false
+
+language: c
+
+branches:
+  only:
+  - master
+
+compiler:
+  - touch ~/gcc-5; gcc-5
+  - touch ~/gcc-8; gcc-8
+  - clang
+  - touch ~/clang-7; clang-7
+
+os:
+  - linux
+  - osx
+
+matrix:
+  exclude:
+    - os: osx
+      compiler: touch ~/gcc-5; gcc-5
+    - os: osx
+      compiler: touch ~/gcc-8; gcc-8
+    - os: osx
+      compiler: touch ~/clang-7; clang-7
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-trusty-7
+    packages:
+    - gcc-5
+    - gcc-8
+    - clang-7
+    - libgtk-3-dev
+    - halibut
+
+before_install:
+  - if [ -f ~/gcc-5 ] ; then export CC=gcc-5; fi
+  - if [ -f ~/gcc-8 ] ; then export CC=gcc-8; fi
+  - if [ -f ~/clang-7 ] ; then export CC=clang-7; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update && brew install halibut; fi
+
+script:
+  - ./mkfiles.pl
+  - autoreconf -fi
+  - ./configure --prefix=$TRAVIS_BUILD_DIR
+  - cd doc
+  - make man
+  - cd ..
+  - make
+  - python ./test/cryptsuite.py
