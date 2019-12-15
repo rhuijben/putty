@@ -27,6 +27,10 @@ matrix:
     - os: osx
       arch: arm64
 
+env:
+  - TRAVIS_CFLAGS="-O2"
+  - TRAVIS_CFLAGS="-O0 -fprofile-arcs -ftest-coverage -g"
+
 addons:
   apt:
     packages:
@@ -43,7 +47,7 @@ before_script:
   - cd $TRAVIS_BUILD_DIR
   - ./mkfiles.pl
   - autoreconf -fi
-  - ./configure --prefix=$TRAVIS_BUILD_DIR
+  - ./configure --prefix=$TRAVIS_BUILD_DIR CFLAGS="${TRAVIS_CFLAGS}"
   - curl -s https://codecov.io/bash > codecov.sh
   - chmod +x ./codecov.sh
   - |
@@ -53,7 +57,7 @@ before_script:
     else
       export COV="gcov"
     fi
-  # Clang exceeds memory, disable it
+  # Clang exceeds memory, disable DynamoRIO tests
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_CPU_ARCH" == "amd64" ] && [ "$CC" == "gcc" ];
     then
@@ -66,41 +70,23 @@ before_script:
       cmake -G Ninja -DCMAKE_PREFIX_PATH=$DRBUILD/cmake .
       ninja
     fi
-
-script:
-  - cd $TRAVIS_BUILD_DIR/doc && make man
-  - cd $TRAVIS_BUILD_DIR && make
-  - $CC -std=c99 -DSTRIPCTRL_TEST -o scctest stripctrl.c marshal.o utils.o memory.o wcwidth.o -I . -I unix -I charset -O2
-  - $CC -std=c99 -DTESTMODE -o wctest wildcard.c -I . -I unix -I charset -O2
-  - ./cgtest
-  - ./scctest
-  - ./wctest
-  - python3 ./test/cryptsuite.py
-  - |
-    if [[ -n "${DRBUILD}" ]];
-    then
-      # Run a single test for now. Waiting for Simon's fixes of MAC memory allocation
-      $DRBUILD/bin64/drrun -c test/sclog/libsclog.so -- ./testsc -O /tmp mp_get_nbits
-    else
-      ./testsc || true
-    fi
-
-after_success:
-  # Need SDE for SHA modeling
+  # Use SDE for SHA modeling
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_CPU_ARCH" == "amd64" ]; then
       wget -q ${SDE_URL}
       tar xvf ${SDE_ARCHIVE}.tar.bz2
       export PUTTY_TESTCRYPT='${TRAVIS_BUILD_DIR}/${SDE_ARCHIVE}/sde64 -mix -- $TRAVIS_BUILD_DIR/testcrypt'
     fi
-  - ./configure --prefix=$TRAVIS_BUILD_DIR CFLAGS="-O0 -fprofile-arcs -ftest-coverage -g"
-  - make clean
-  - make testcrypt cgtest testsc
-  - $CC -std=c99 -DSTRIPCTRL_TEST -o scctest stripctrl.c marshal.o utils.o memory.o wcwidth.o -I . -I unix -I charset -O0 -fprofile-arcs -ftest-coverage -g
-  - $CC -std=c99 -DTESTMODE -o wctest wildcard.c -I . -I unix -I charset -O0 -fprofile-arcs -ftest-coverage -g
+
+script:
+  - cd $TRAVIS_BUILD_DIR/doc && make man
+  - cd $TRAVIS_BUILD_DIR && make
+  - $CC -std=c99 -DSTRIPCTRL_TEST -o scctest stripctrl.c marshal.o utils.o memory.o wcwidth.o -I . -I unix -I charset $TRAVIS_CFLAGS
+  - $CC -std=c99 -DTESTMODE -o wctest wildcard.c -I . -I unix -I charset $TRAVIS_CFLAGS
   - ./cgtest  && ./codecov.sh -x "${COV}"
   - ./scctest && ./codecov.sh -x "${COV}"
   - ./wctest  && ./codecov.sh -x "${COV}"
+  - python3 ./test/cryptsuite.py && ./codecov.sh -x "${COV}"
   - |
     if [[ -n "${DRBUILD}" ]];
     then
@@ -109,4 +95,3 @@ after_success:
       ./testsc
     fi
   - ./codecov.sh -x "${COV}"
-  - python3 ./test/cryptsuite.py && ./codecov.sh -x "${COV}"
