@@ -1,0 +1,112 @@
+notifications:
+  email: false
+
+language: c
+dist: bionic
+
+branches:
+  only:
+  - master
+
+compiler:
+  - gcc
+  - clang
+
+arch:
+  - amd64
+  - arm64
+
+os:
+  - linux
+  - osx
+
+matrix:
+  exclude:
+    - os: osx
+      compiler: gcc
+    - os: osx
+      arch: arm64
+
+addons:
+  apt:
+    packages:
+    - libgtk-3-dev
+    - halibut
+    - ninja-build
+  homebrew:
+    packages:
+    - halibut
+    - ninja
+    update: true
+
+before_script:
+  - cd $TRAVIS_BUILD_DIR
+  - ./mkfiles.pl
+  - autoreconf -fi
+  - ./configure --prefix=$TRAVIS_BUILD_DIR
+  - curl -s https://codecov.io/bash > codecov.sh
+  - chmod +x ./codecov.sh
+  - |
+    if [ "$CC" == "clang" ];
+    then
+      export COV="llvm-cov gcov"
+    else
+      export COV="gcov"
+    fi
+  # Clang exceeds memory, disable it
+  - |
+    if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_CPU_ARCH" == "amd64" ] && [ "$CC" == "gcc" ];
+    then
+      git clone https://github.com/DynamoRIO/dynamorio.git --depth=1
+      mkdir dynamorio-build && cd dynamorio-build
+      export DRBUILD=$TRAVIS_BUILD_DIR/dynamorio-build
+      cmake -G Ninja ../dynamorio
+      ninja
+      cd $TRAVIS_BUILD_DIR/test/sclog
+      cmake -G Ninja -DCMAKE_PREFIX_PATH=$DRBUILD/cmake .
+      ninja
+    fi
+
+script:
+  - cd $TRAVIS_BUILD_DIR/doc && make man
+  - cd $TRAVIS_BUILD_DIR && make
+  - $CC -std=c99 -DSTRIPCTRL_TEST -o scctest stripctrl.c marshal.o utils.o memory.o wcwidth.o -I . -I unix -I charset -O2
+  - $CC -std=c99 -DTESTMODE -o wctest wildcard.c -I . -I unix -I charset -O2
+  - ./cgtest
+  - ./scctest
+  - ./wctest
+  - python3 ./test/cryptsuite.py
+  - |
+    if [[ -n "${DRBUILD}" ]];
+    then
+      # Run a single test for now. Waiting for Simon's fixes of MAC memory allocation
+      $DRBUILD/bin64/drrun -c test/sclog/libsclog.so -- ./testsc -O /tmp mp_get_nbits
+    else
+      ./testsc || true
+    fi
+
+after_success:
+  # Need SDE for SHA modeling
+  - |
+    if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_CPU_ARCH" == "amd64" ]; then
+      wget -q ${SDE_URL}
+      tar xvf ${SDE_ARCHIVE}.tar.bz2
+      export PUTTY_TESTCRYPT='${TRAVIS_BUILD_DIR}/${SDE_ARCHIVE}/sde64 -mix -- $TRAVIS_BUILD_DIR/testcrypt'
+    fi
+  - ./configure --prefix=$TRAVIS_BUILD_DIR CFLAGS="-O0 -fprofile-arcs -ftest-coverage -g"
+  - make clean
+  - make testcrypt cgtest testsc
+  - $CC -std=c99 -DSTRIPCTRL_TEST -o scctest stripctrl.c marshal.o utils.o memory.o wcwidth.o -I . -I unix -I charset -O0 -fprofile-arcs -ftest-coverage -g
+  - $CC -std=c99 -DTESTMODE -o wctest wildcard.c -I . -I unix -I charset -O0 -fprofile-arcs -ftest-coverage -g
+  - ./cgtest  && ./codecov.sh -x "${COV}"
+  - ./scctest && ./codecov.sh -x "${COV}"
+  - ./wctest  && ./codecov.sh -x "${COV}"
+  - |
+    if [[ -n "${DRBUILD}" ]];
+    then
+      $DRBUILD/bin64/drrun -c test/sclog/libsclog.so -- ./testsc -O /tmp mp_get_nbits
+    else
+      ./testsc
+    fi
+  - ./codecov.sh -x "${COV}"
+  - python3 ./test/cryptsuite.py && ./codecov.sh -x "${COV}"
