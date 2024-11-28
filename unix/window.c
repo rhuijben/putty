@@ -2546,13 +2546,13 @@ static void gtkwin_set_raw_mouse_mode_pointer(TermWin *tw, bool activate)
 static void compute_whole_window_size(GtkFrontend *inst,
                                       int wchars, int hchars,
                                       int *wpix, int *hpix);
-#endif
 
 static void gtkwin_deny_term_resize(void *vctx)
 {
     GtkFrontend *inst = (GtkFrontend *)vctx;
     drawing_area_setup_simple(inst);
 }
+#endif
 
 static void gtkwin_timer(void *vctx, unsigned long now)
 {
