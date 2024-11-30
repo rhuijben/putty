@@ -34,12 +34,12 @@ to include a \c{set} command like the one above.
 This section describes the basics of how to use Plink for
 interactive logins and for automated processes.
 
-Once you've got a console window to type into, you can just type
-\c{plink} on its own to bring up a usage message.  This tells you the
+Once you've got a console window to type into, you can type
+\c{plink --help} to bring up a usage message.  This tells you the
 version of Plink you're using, and gives you a brief summary of how to
 use Plink:
 
-\c C:\>plink
+\c C:\>plink --help
 \c Plink: command-line connection utility
 \c Release 0.82
 \c Usage: plink [options] [user@]host [command]
