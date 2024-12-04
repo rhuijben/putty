@@ -1927,6 +1927,7 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
             if (event->state & GDK_CONTROL_MASK)
                 break;
 
+            consumed_meta_key = false;
             end = 1 + format_small_keypad_key(
                 output+1, inst->term, sk_key, event->state & GDK_SHIFT_MASK,
                 event->state & GDK_CONTROL_MASK,
