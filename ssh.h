@@ -1213,6 +1213,7 @@ extern const ssh_hashalg ssh_sha3_224;
 extern const ssh_hashalg ssh_sha3_256;
 extern const ssh_hashalg ssh_sha3_384;
 extern const ssh_hashalg ssh_sha3_512;
+extern const ssh_hashalg ssh_shake256_32bytes;
 extern const ssh_hashalg ssh_shake256_114bytes;
 extern const ssh_hashalg ssh_blake2b;
 extern const ssh_kexes ssh_diffiehellman_group1;

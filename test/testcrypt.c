@@ -99,6 +99,7 @@ uint64_t prng_reseed_time_ms(void)
     X(millerrabin, MillerRabin *, miller_rabin_free(v))                 \
     X(ntrukeypair, NTRUKeyPair *, ntru_keypair_free(v))                 \
     X(ntruencodeschedule, NTRUEncodeSchedule *, ntru_encode_schedule_free(v)) \
+    X(shakexof, ShakeXOF *, shake_xof_free(v))                          \
     /* end of list */
 
 typedef struct Value Value;
@@ -740,6 +741,14 @@ strbuf *ssh_hash_final_wrapper(ssh_hash *h)
     strbuf *sb = strbuf_new();
     void *p = strbuf_append(sb, ssh_hash_alg(h)->hlen);
     ssh_hash_final(h, p);
+    return sb;
+}
+
+strbuf *shake_xof_read_wrapper(ShakeXOF *sx, TD_uint size)
+{
+    strbuf *sb = strbuf_new();
+    void *p = strbuf_append(sb, size);
+    shake_xof_read(sx, p, size);
     return sb;
 }
 

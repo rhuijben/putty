@@ -193,6 +193,7 @@ typedef struct NTRUKeyPair NTRUKeyPair;
 typedef struct NTRUEncodeSchedule NTRUEncodeSchedule;
 typedef struct RFC6979 RFC6979;
 typedef struct RFC6979Result RFC6979Result;
+typedef struct ShakeXOF ShakeXOF;
 
 typedef struct dlgparam dlgparam;
 typedef struct dlgcontrol dlgcontrol;

@@ -264,6 +264,10 @@ FUNC(void, ssh_hash_update, ARG(val_hash, h), ARG(val_string_ptrlen, data))
 
 FUNC(opt_val_hash, blake2b_new_general, ARG(uint, hashlen))
 
+FUNC(val_shakexof, shake128_xof_from_input, ARG(val_string_ptrlen, input))
+FUNC(val_shakexof, shake256_xof_from_input, ARG(val_string_ptrlen, input))
+FUNC_WRAPPED(val_string, shake_xof_read, ARG(val_shakexof, xof), ARG(uint, size))
+
 /*
  * The ssh2_mac abstraction. Note the optional ssh_cipher parameter
  * to ssh2_mac_new. Also, again, I've invented an ssh2_mac_update so
