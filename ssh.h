@@ -1006,6 +1006,52 @@ static inline char *ecdh_keyalg_description(const ssh_kex *kex)
 { return kex->ecdh_vt->description(kex); }
 
 /*
+ * vtable for post-quantum key encapsulation methods (things like NTRU
+ * and ML-KEM).
+ *
+ * These work in an asymmetric way that's conceptually more like the
+ * old RSA kex (either SSH-1 or SSH-2) than like Diffie-Hellman. One
+ * party generates a keypair and sends the public key; the other party
+ * invents a secret and encrypts it with the public key; the first
+ * party receives the ciphertext and decrypts it, and now both parties
+ * have the secret.
+ */
+struct pq_kem_dk {
+    const pq_kemalg *vt;
+};
+struct pq_kemalg {
+    /* Generate a key pair, writing the public encryption key in wire
+     * format to ek. Return the decryption key. */
+    pq_kem_dk *(*keygen)(const pq_kemalg *alg, BinarySink *ek);
+    /* Invent and encrypt a secret, writing the ciphertext in wire
+     * format to c and the secret itself to k. Returns false on any
+     * kind of really obvious validation failure of the encryption key. */
+    bool (*encaps)(const pq_kemalg *alg, BinarySink *c, BinarySink *k,
+                   ptrlen ek);
+    /* Decrypt the secret and write it to k. Returns false on
+     * validation failure. However, more competent cryptographic
+     * attacks are rejected in a way that's not obvious, returning a
+     * useless pseudorandom secret. */
+    bool (*decaps)(pq_kem_dk *dk, BinarySink *k, ptrlen c);
+    /* Free a decryption key. */
+    void (*free_dk)(pq_kem_dk *dk);
+
+    const void *extra;
+    const char *description;
+    size_t ek_len, c_len;
+};
+
+static inline pq_kem_dk *pq_kem_keygen(const pq_kemalg *alg, BinarySink *ek)
+{ return alg->keygen(alg, ek); }
+static inline bool pq_kem_encaps(const pq_kemalg *alg, BinarySink *c,
+                                 BinarySink *k, ptrlen ek)
+{ return alg->encaps(alg, c, k, ek); }
+static inline bool pq_kem_decaps(pq_kem_dk *dk, BinarySink *k, ptrlen c)
+{ return dk->vt->decaps(dk, k, c); }
+static inline void pq_kem_free_dk(pq_kem_dk *dk)
+{ dk->vt->free_dk(dk); }
+
+/*
  * Suffix on GSSAPI SSH protocol identifiers that indicates Kerberos 5
  * as the mechanism.
  *
@@ -1194,6 +1240,7 @@ extern const ssh_kex ssh_ec_kex_nistp384;
 extern const ssh_kex ssh_ec_kex_nistp521;
 extern const ssh_kexes ssh_ecdh_kex;
 extern const ssh_kexes ssh_ntru_hybrid_kex;
+extern const pq_kemalg ssh_ntru;
 extern const ssh_keyalg ssh_dsa;
 extern const ssh_keyalg ssh_rsa;
 extern const ssh_keyalg ssh_rsa_sha256;

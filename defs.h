@@ -187,6 +187,8 @@ typedef struct ssh2_ciphers ssh2_ciphers;
 typedef struct dh_ctx dh_ctx;
 typedef struct ecdh_key ecdh_key;
 typedef struct ecdh_keyalg ecdh_keyalg;
+typedef struct pq_kemalg pq_kemalg;
+typedef struct pq_kem_dk pq_kem_dk;
 typedef struct NTRUKeyPair NTRUKeyPair;
 typedef struct NTRUEncodeSchedule NTRUEncodeSchedule;
 typedef struct RFC6979 RFC6979;

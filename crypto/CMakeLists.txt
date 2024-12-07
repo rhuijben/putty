@@ -20,6 +20,7 @@ add_sources_from_current_dir(crypto
   ecc-ssh.c
   hash_simple.c
   hmac.c
+  kex-hybrid.c
   mac.c
   mac_simple.c
   md5.c
