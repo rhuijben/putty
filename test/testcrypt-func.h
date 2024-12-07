@@ -406,6 +406,36 @@ FUNC_WRAPPED(int16_list, ntru_decrypt, ARG(int16_list, ciphertext),
              ARG(val_ntrukeypair, keypair))
 
 /*
+ * ML-KEM and its subroutines.
+ */
+FUNC(void, mlkem_keygen,
+     ARG(out_val_string_binarysink, ek), ARG(out_val_string_binarysink, dk),
+     ARG(mlkem_params, params))
+FUNC_WRAPPED(void, mlkem_keygen_internal,
+             ARG(out_val_string_binarysink, ek),
+             ARG(out_val_string_binarysink, dk),
+             ARG(mlkem_params, params),
+             ARG(val_string_ptrlen, d), ARG(val_string_ptrlen, z))
+FUNC_WRAPPED(void, mlkem_keygen_rho_sigma,
+             ARG(out_val_string_binarysink, ek),
+             ARG(out_val_string_binarysink, dk),
+             ARG(mlkem_params, params), ARG(val_string_ptrlen, rho),
+             ARG(val_string_ptrlen, sigma), ARG(val_string_ptrlen, z))
+FUNC(boolean, mlkem_encaps,
+     ARG(out_val_string_binarysink, ciphertext),
+     ARG(out_val_string_binarysink, k),
+     ARG(mlkem_params, params),
+     ARG(val_string_ptrlen, ek))
+FUNC_WRAPPED(boolean, mlkem_encaps_internal,
+             ARG(out_val_string_binarysink, ciphertext),
+             ARG(out_val_string_binarysink, k),
+             ARG(mlkem_params, params),
+             ARG(val_string_ptrlen, ek), ARG(val_string_ptrlen, m))
+FUNC(boolean, mlkem_decaps, ARG(out_val_string_binarysink, k),
+     ARG(mlkem_params, params), ARG(val_string_ptrlen, dk),
+     ARG(val_string_ptrlen, ciphertext))
+
+/*
  * RSA key exchange, and also the BinarySource get function
  * get_ssh1_rsa_priv_agent, which is a convenient way to make an
  * RSAKey for RSA kex testing purposes.

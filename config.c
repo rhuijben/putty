@@ -578,6 +578,8 @@ static void kexlist_handler(dlgcontrol *ctrl, dlgparam *dlg,
             { "RSA-based key exchange",             KEX_RSA },
             { "ECDH key exchange",                  KEX_ECDH },
             { "NTRU Prime / Curve25519 hybrid kex", KEX_NTRU_HYBRID },
+            { "ML-KEM / Curve25519 hybrid kex",     KEX_MLKEM_25519_HYBRID },
+            { "ML-KEM / NIST ECDH hybrid kex",      KEX_MLKEM_NIST_HYBRID },
             { "-- warn below here --",              KEX_WARN }
         };
 

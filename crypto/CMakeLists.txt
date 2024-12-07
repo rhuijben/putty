@@ -24,6 +24,7 @@ add_sources_from_current_dir(crypto
   mac.c
   mac_simple.c
   md5.c
+  mlkem.c
   mpint.c
   ntru.c
   openssh-certs.c

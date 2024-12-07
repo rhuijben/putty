@@ -1242,6 +1242,11 @@ extern const ssh_kex ssh_ec_kex_nistp521;
 extern const ssh_kexes ssh_ecdh_kex;
 extern const ssh_kexes ssh_ntru_hybrid_kex;
 extern const pq_kemalg ssh_ntru;
+extern const ssh_kexes ssh_mlkem_curve25519_hybrid_kex;
+extern const ssh_kexes ssh_mlkem_nist_hybrid_kex;
+extern const pq_kemalg ssh_mlkem512;
+extern const pq_kemalg ssh_mlkem768;
+extern const pq_kemalg ssh_mlkem1024;
 extern const ssh_keyalg ssh_dsa;
 extern const ssh_keyalg ssh_rsa;
 extern const ssh_keyalg ssh_rsa_sha256;
@@ -1281,6 +1286,13 @@ ssh_hash *blake2b_new_general(unsigned hashlen);
 
 /* Special test function for AES-GCM */
 void aesgcm_set_prefix_lengths(ssh2_mac *mac, size_t skip, size_t aad);
+
+/* Shake128/256 extendable output functions (like a hash except you don't
+ * commit up front to how much data you want to get out of it) */
+ShakeXOF *shake128_xof_from_input(ptrlen data);
+ShakeXOF *shake256_xof_from_input(ptrlen data);
+void shake_xof_read(ShakeXOF *sx, void *output_v, size_t size);
+void shake_xof_free(ShakeXOF *sx);
 
 /*
  * On some systems, you have to detect hardware crypto acceleration by

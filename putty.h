@@ -388,6 +388,8 @@ enum {
     KEX_RSA,
     KEX_ECDH,
     KEX_NTRU_HYBRID,
+    KEX_MLKEM_25519_HYBRID,
+    KEX_MLKEM_NIST_HYBRID,
     KEX_MAX
 };
 

@@ -36,6 +36,10 @@ static char *hybrid_description(const ssh_kex *kex)
     const char *classical_name;
     if (alg->classical_alg == &ssh_ec_kex_curve25519)
         classical_name = "Curve25519";
+    else if (alg->classical_alg == &ssh_ec_kex_nistp256)
+        classical_name = "NIST P256";
+    else if (alg->classical_alg == &ssh_ec_kex_nistp384)
+        classical_name = "NIST P384";
     else
         unreachable("don't have a name for this classical alg");
 
@@ -319,4 +323,66 @@ static const ssh_kex *const ntru_hybrid_list[] = {
 
 const ssh_kexes ssh_ntru_hybrid_kex = {
     lenof(ntru_hybrid_list), ntru_hybrid_list,
+};
+
+static const hybrid_alg ssh_mlkem768_curve25519_hybrid = {
+    .combining_hash = &ssh_sha256,
+    .pq_alg = &ssh_mlkem768,
+    .classical_alg = &ssh_ec_kex_curve25519,
+    .reformat = reformat_mpint_be_32,
+};
+
+static const ssh_kex ssh_mlkem768_curve25519 = {
+    .name = "mlkem768x25519-sha256",
+    .main_type = KEXTYPE_ECDH,
+    .hash = &ssh_sha256,
+    .ecdh_vt = &hybrid_selector_vt,
+    .extra = &ssh_mlkem768_curve25519_hybrid,
+};
+
+static const ssh_kex *const mlkem_curve25519_hybrid_list[] = {
+    &ssh_mlkem768_curve25519,
+};
+
+const ssh_kexes ssh_mlkem_curve25519_hybrid_kex = {
+    lenof(mlkem_curve25519_hybrid_list), mlkem_curve25519_hybrid_list,
+};
+
+static const hybrid_alg ssh_mlkem768_p256_hybrid = {
+    .combining_hash = &ssh_sha256,
+    .pq_alg = &ssh_mlkem768,
+    .classical_alg = &ssh_ec_kex_nistp256,
+    .reformat = reformat_mpint_be_32,
+};
+
+static const ssh_kex ssh_mlkem768_p256 = {
+    .name = "mlkem768nistp256-sha256",
+    .main_type = KEXTYPE_ECDH,
+    .hash = &ssh_sha256,
+    .ecdh_vt = &hybrid_selector_vt,
+    .extra = &ssh_mlkem768_p256_hybrid,
+};
+
+static const hybrid_alg ssh_mlkem1024_p384_hybrid = {
+    .combining_hash = &ssh_sha384,
+    .pq_alg = &ssh_mlkem1024,
+    .classical_alg = &ssh_ec_kex_nistp384,
+    .reformat = reformat_mpint_be_48,
+};
+
+static const ssh_kex ssh_mlkem1024_p384 = {
+    .name = "mlkem1024nistp384-sha384",
+    .main_type = KEXTYPE_ECDH,
+    .hash = &ssh_sha384,
+    .ecdh_vt = &hybrid_selector_vt,
+    .extra = &ssh_mlkem1024_p384_hybrid,
+};
+
+static const ssh_kex *const mlkem_nist_hybrid_list[] = {
+    &ssh_mlkem1024_p384,
+    &ssh_mlkem768_p256,
+};
+
+const ssh_kexes ssh_mlkem_nist_hybrid_kex = {
+    lenof(mlkem_nist_hybrid_list), mlkem_nist_hybrid_list,
 };
