@@ -2747,7 +2747,7 @@ void setup_config_box(struct controlbox *b, bool midsession,
             c = ctrl_draglist(s, "Algorithm selection policy:", 's',
                               HELPCTX(ssh_kexlist),
                               kexlist_handler, P(NULL));
-            c->listbox.height = KEX_MAX;
+            c->listbox.height = 10;
 #ifndef NO_GSSAPI
             ctrl_checkbox(s, "Attempt GSSAPI key exchange",
                           'k', HELPCTX(ssh_gssapi),
