@@ -1166,7 +1166,7 @@ static ScanKexinitsResult ssh2_scan_kexinits(
              * Otherwise, any match failure _is_ a fatal error.
              */
             ScanKexinitsResult skr = {
-                .success = false, .error = SKR_UNKNOWN_ID,
+                .success = false, .error = SKR_NO_AGREEMENT,
                 .kind = kexlist_descr[i], .desc = slists[i],
             };
             return skr;
