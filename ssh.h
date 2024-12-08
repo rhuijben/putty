@@ -136,6 +136,7 @@ typedef enum {
     SSH2_PKTCTX_DHGROUP,
     SSH2_PKTCTX_DHGEX,
     SSH2_PKTCTX_ECDHKEX,
+    SSH2_PKTCTX_HYBRIDKEX,
     SSH2_PKTCTX_GSSKEX,
     SSH2_PKTCTX_RSAKEX
 } Pkt_KCtx;
@@ -992,6 +993,12 @@ struct ecdh_keyalg {
     void (*getpublic)(ecdh_key *key, BinarySink *bs);
     bool (*getkey)(ecdh_key *key, ptrlen remoteKey, BinarySink *bs);
     char *(*description)(const ssh_kex *kex);
+
+    /* Some things that use this vtable are genuinely elliptic-curve
+     * Diffie-Hellman. Others are hybrid PQ + classical kex methods.
+     * Provide a packet-naming context for use in the SSH log. (Purely
+     * cosmetic.) */
+    Pkt_KCtx packet_naming_ctx;
 };
 static inline ecdh_key *ecdh_key_new(const ssh_kex *kex, bool is_server)
 { return kex->ecdh_vt->new(kex, is_server); }
@@ -1788,6 +1795,8 @@ void platform_ssh_share_cleanup(const char *name);
     K(y, SSH2_MSG_KEXRSA_DONE, 32, SSH2_PKTCTX_RSAKEX)                  \
     K(y, SSH2_MSG_KEX_ECDH_INIT, 30, SSH2_PKTCTX_ECDHKEX)               \
     K(y, SSH2_MSG_KEX_ECDH_REPLY, 31, SSH2_PKTCTX_ECDHKEX)              \
+    K(y, SSH2_MSG_KEX_HYBRID_INIT, 30, SSH2_PKTCTX_HYBRIDKEX)           \
+    K(y, SSH2_MSG_KEX_HYBRID_REPLY, 31, SSH2_PKTCTX_HYBRIDKEX)          \
     X(y, SSH2_MSG_USERAUTH_REQUEST, 50)                                 \
     X(y, SSH2_MSG_USERAUTH_FAILURE, 51)                                 \
     X(y, SSH2_MSG_USERAUTH_SUCCESS, 52)                                 \

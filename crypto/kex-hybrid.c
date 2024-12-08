@@ -169,6 +169,7 @@ static const ecdh_keyalg hybrid_client_vt = {
     .getpublic = hybrid_client_getpublic,
     .getkey = hybrid_client_getkey,
     .description = hybrid_description,
+    .packet_naming_ctx = SSH2_PKTCTX_HYBRIDKEX,
 };
 
 /* ----------------------------------------------------------------------
@@ -267,6 +268,7 @@ static const ecdh_keyalg hybrid_server_vt = {
     .getkey = hybrid_server_getkey,
     .getpublic = hybrid_server_getpublic,
     .description = hybrid_description,
+    .packet_naming_ctx = SSH2_PKTCTX_HYBRIDKEX,
 };
 
 /* ----------------------------------------------------------------------
@@ -287,6 +289,7 @@ static const ecdh_keyalg hybrid_selector_vt = {
      * functions that don't require an instance. */
     .new = hybrid_selector_new,
     .description = hybrid_description,
+    .packet_naming_ctx = SSH2_PKTCTX_HYBRIDKEX,
 };
 
 /* ----------------------------------------------------------------------
