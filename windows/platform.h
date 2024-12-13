@@ -66,6 +66,7 @@ struct Filename {
     char *cpath, *utf8path;
 };
 Filename *filename_from_wstr(const wchar_t *str);
+const wchar_t *filename_to_wstr(const Filename *fn);
 FILE *f_open(const Filename *filename, const char *mode, bool isprivate);
 
 #ifndef SUPERSEDE_FONTSPEC_FOR_TESTING
