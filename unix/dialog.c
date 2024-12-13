@@ -1739,6 +1739,9 @@ static void filefont_clicked(GtkButton *button, gpointer data)
     struct uctrl *uc = dlg_find_bywidget(dp, GTK_WIDGET(button));
 
     if (uc->ctrl->type == CTRL_FILESELECT) {
+        /*
+         * FIXME: do something about uc->ctrl->fileselect.filter
+         */
 #ifdef USE_GTK_FILE_CHOOSER_DIALOG
         GtkWidget *filechoose = gtk_file_chooser_dialog_new(
             uc->ctrl->fileselect.title, GTK_WINDOW(dp->window),

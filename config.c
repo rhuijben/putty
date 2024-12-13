@@ -1987,7 +1987,7 @@ void setup_config_box(struct controlbox *b, bool midsession,
                           sshrawlogname, 'r', I(LGTYP_SSHRAW));
     }
     ctrl_filesel(s, "Log file name:", 'f',
-                 NULL, true, "Select session log file name",
+                 FILTER_ALL_FILES, true, "Select session log file name",
                  HELPCTX(logging_filename),
                  conf_filesel_handler, I(CONF_logfilename));
     ctrl_text(s, "(Log file name can contain &Y, &M, &D for date,"
@@ -2932,7 +2932,7 @@ void setup_config_box(struct controlbox *b, bool midsession,
                          conf_filesel_handler, I(CONF_keyfile));
             ctrl_filesel(s, "Certificate to use with the private key "
                          "(optional):", 'e',
-                         NULL, false, "Select certificate file",
+                         FILTER_ALL_FILES, false, "Select certificate file",
                          HELPCTX(ssh_auth_cert),
                          conf_filesel_handler, I(CONF_detached_cert));
 
