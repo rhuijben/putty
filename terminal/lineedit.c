@@ -454,6 +454,24 @@ void lineedit_input(TermLineEditor *le, char ch, bool dedicated)
                     lineedit_complete_line(le);
                     return;
                 }
+            } else {
+                /* If we're not in LE_CRLF_NEWLINE mode, then ^J by
+                 * itself acts as a full newline character */
+                lineedit_complete_line(le);
+                return;
+            }
+
+
+          case CTRL('M'):
+            if (le->flags & LE_CRLF_NEWLINE) {
+                /* In this mode, ^M is literal, and can combine with
+                 * ^J (see case above). So do nothing, and fall
+                 * through into the 'treat it literally' code, */
+            } else {
+                /* If we're not in LE_CRLF_NEWLINE mode, then ^M by
+                 * itself acts as a full newline character */
+                lineedit_complete_line(le);
+                return;
             }
         }
     }
