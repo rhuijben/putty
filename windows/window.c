@@ -2185,12 +2185,12 @@ static void wm_size_resize_term(WinGuiSeat *wgs, LPARAM lParam)
          * numbers of resize events.
          */
         wgs->need_backend_resize = true;
-        conf_set_int(wgs->conf, CONF_height, h);
-        conf_set_int(wgs->conf, CONF_width, w);
     } else {
         term_size(wgs->term, h, w,
                   conf_get_int(wgs->conf, CONF_savelines));
     }
+    conf_set_int(wgs->conf, CONF_height, h);
+    conf_set_int(wgs->conf, CONF_width, w);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
