@@ -4127,9 +4127,11 @@ static void term_out(Terminal *term, bool called_from_term_data)
                     term->esc_args[0] = 0;
                     term->esc_nargs = 1;
                     break;
+                  case 'X':             /* SOS: Start of String */
+                  case '^':             /* PM: privacy message */
                   case '_':             /* APC: application program command */
-                    /* APC sequences are just a string, terminated by
-                     * ST or (I've observed in practice) ^G. That is,
+                    /* SOS, PM, and APC sequences are just a string, terminated by
+                     * ST or (I've observed in practice for APC) ^G. That is,
                      * they have the same termination convention as
                      * OSC. So we handle them by going straight into
                      * OSC_STRING state and setting a flag indicating
