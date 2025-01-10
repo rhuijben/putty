@@ -399,18 +399,18 @@ void fd_socket_set_psb_prefix(Socket *s, const char *prefix);
  * fallback, and we also have a single overall default which goes into
  * Conf to populate the initial state of Default Settings.
  *
- * The overall default varies depending on NOT_X_WINDOWS: if X is
- * available then the default is xterm's traditional "fixed", but if
- * it's not, so that only client-side fonts can be used at all, we
- * switch to a client-side default.
+ * In the past, this default varied with NOT_X_WINDOWS. But these days
+ * non-X11 environments like Wayland with only client-side fonts are
+ * common, and even an X11-capable _build_ of PuTTY is quite likely to
+ * find out at run time that X11 and its bitmap fonts aren't
+ * available. Also, a fixed-size bitmap font doesn't play nicely with
+ * high-DPI displays. And the GTK1 build of PuTTY, which can _only_
+ * handle server-side fonts, is legacy. So the default font is
+ * unconditionally the client-side one.
  */
 #define DEFAULT_GTK_CLIENT_FONT "client:Monospace 12"
 #define DEFAULT_GTK_SERVER_FONT "server:fixed"
-#ifdef NOT_X_WINDOWS
 #define DEFAULT_GTK_FONT DEFAULT_GTK_CLIENT_FONT
-#else
-#define DEFAULT_GTK_FONT DEFAULT_GTK_SERVER_FONT
-#endif
 
 /*
  * pty.c.
