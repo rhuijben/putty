@@ -5361,8 +5361,8 @@ void new_session_window(Conf *conf, const char *geometry_string)
             goto fonts_ok;
 
         static const char *const fallbacks[] = {
-            "client:Monospace 10",
-            "server:fixed",
+            DEFAULT_GTK_CLIENT_FONT,
+            DEFAULT_GTK_SERVER_FONT,
         };
         for (size_t i = 0; i < lenof(fallbacks); i++) {
             Conf *fallback_conf = conf_new();

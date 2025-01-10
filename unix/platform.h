@@ -394,12 +394,22 @@ void setup_fd_socket(Socket *s, int infd, int outfd, int inerrfd);
 void fd_socket_set_psb_prefix(Socket *s, const char *prefix);
 
 /*
- * Default font setting, which can vary depending on NOT_X_WINDOWS.
+ * Default font settings. We have a default font for each of
+ * client-side and server-side, so that we can use one of each as a
+ * fallback, and we also have a single overall default which goes into
+ * Conf to populate the initial state of Default Settings.
+ *
+ * The overall default varies depending on NOT_X_WINDOWS: if X is
+ * available then the default is xterm's traditional "fixed", but if
+ * it's not, so that only client-side fonts can be used at all, we
+ * switch to a client-side default.
  */
+#define DEFAULT_GTK_CLIENT_FONT "client:Monospace 12"
+#define DEFAULT_GTK_SERVER_FONT "server:fixed"
 #ifdef NOT_X_WINDOWS
-#define DEFAULT_GTK_FONT "client:Monospace 12"
+#define DEFAULT_GTK_FONT DEFAULT_GTK_CLIENT_FONT
 #else
-#define DEFAULT_GTK_FONT "server:fixed"
+#define DEFAULT_GTK_FONT DEFAULT_GTK_SERVER_FONT
 #endif
 
 /*
