@@ -167,7 +167,7 @@ passphrases on startup.
 If Pageant is already running, this syntax loads keys into the
 existing Pageant.
 
-You can specify the \cq{\-\-encrypted} option to defer decryption of
+You can specify the \c{\-\-encrypted} option to defer decryption of
 these keys; see \k{pageant-deferred-decryption}.
 
 \S{pageant-cmdline-command} Making Pageant run another program
@@ -238,7 +238,7 @@ original Windows Subsystem for Linux (now known as WSL 1). So if you
 ask Pageant to listen on one of these, then your WSL 1 processes can
 talk directly to Pageant.
 
-To configure this, run Pageant with the option \c{\-\-unix}, followed
+To configure this, run Pageant with the option \i\c{\-\-unix}, followed
 with a pathname. Then, in WSL 1, set the environment variable
 \cw{SSH_AUTH_SOCK} to point at the WSL translation of that pathname.
 
@@ -282,7 +282,7 @@ see \k{using-cmdline-restrict-acl} for why you might want to do this.
 
 By default, if Pageant is started with \c{\-restrict\-acl}, it won't
 pass this to any PuTTY sessions started from its System Tray submenu.
-Use \c{\-restrict\-putty\-acl} to change this. (Again, see
+Use \i\c{\-restrict\-putty\-acl} to change this. (Again, see
 \k{using-cmdline-restrict-acl} for details.)
 
 \H{pageant-forward} Using \i{agent forwarding}
@@ -365,7 +365,7 @@ won't ask for a passphrase. Instead, the key will be listed in the
 main window with \q{(encrypted)} after it.
 
 To start Pageant up in the first place with encrypted keys loaded into
-it, you can use the \cq{\-\-encrypted} option on the command line. For
+it, you can use the \i\c{\-\-encrypted} option on the command line. For
 example:
 
 \c C:\PuTTY\pageant.exe --encrypted d:\main.ppk

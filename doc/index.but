@@ -918,8 +918,17 @@ saved sessions from
 \IM{authentication agent} authentication agent
 \IM{authentication agent} agent, authentication
 
+\IM{-t-puttygen} \c{\-t} PuTTYgen command-line option
+\IM{-b-puttygen} \c{\-b} PuTTYgen command-line option
+\IM{--primes-puttygen} \c{\-\-primes} PuTTYgen command-line option
+\IM{--strong-rsa-puttygen} \c{\-\-strong\-rsa} PuTTYgen command-line option
+\IM{--ppk-param-puttygen} \c{\-\-ppk\-param} PuTTYgen command-line option
+\IM{-E-upper-puttygen} \c{\-E} PuTTYgen command-line option
+
 \IM{-c-pageant} \c{\-c} Pageant command-line option
 \IM{\-\-keylist} \c{\-\-keylist} Pageant command-line option
+\IM{\-\-encrypted} \c{\-\-encrypted} Pageant command-line option
+\IM{\-\-unix} \c{\-\-unix} Pageant command-line option
 \IM{\-\-openssh\-config} \c{\-\-openssh\-config} Pageant command-line option
 
 \IM{Windows OpenSSH} Windows OpenSSH
