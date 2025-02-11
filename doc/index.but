@@ -262,6 +262,8 @@ saved sessions from
 \IM{-i} \c{-i} command-line option
 \IM{-pgpfp} \c{-pgpfp} command-line option
 \IM{-sercfg} \c{-sercfg} command-line option
+\IM{\-share} \c{\-share} command-line option
+\IM{\-noshare} \c{\-noshare} command-line option
 
 \IM{removing registry entries} removing registry entries
 \IM{removing registry entries} registry entries, removing

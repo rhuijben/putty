@@ -1137,6 +1137,26 @@ described there are understood in the argument string, literal
 backslashes must be doubled (if you want \c{\\} in your command, you
 must put \c{\\\\} on the command line).
 
+\S2{using-cmdline-share-noshare} \i\c{\-share}, \i\c{\-noshare}:
+enable/disable connection sharing
+
+These options control whether SSH connection sharing is attempted.
+See \k{config-ssh-sharing} for more information about SSH connection
+sharing. These options are equivalent to the \q{Share SSH connections
+if possible} checkbox in the GUI configuration.
+
+With \c{\-share}, a PuTTY tool will check to see if there's an
+existing \q{upstream} for this host. If there is, then the new session
+will connect via that upstream. If there isn't, the new session will
+\e{become} an upstream for future connections (unless \c{\-share}
+has been given as an option to the file transfer tools, PSCP and PSFTP,
+which never act as upstreams).
+
+With \c{\-noshare}, this connection will not participate in connection
+sharing (either as an upstream or a downstream).
+
+(This option is only meaningful with the SSH-2 protocol.)
+
 \S2{using-cmdline-restrict-acl} \i\c{-restrict-acl}: restrict the
 \i{Windows process ACL}
 
