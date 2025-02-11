@@ -184,14 +184,14 @@ new key). That key will be used for the rest of the current session;
 it may not actually be used for future sessions, depending on your
 preferences (see \k{config-ssh-hostkey-order}).
 
-Normally, PuTTY will carry on using a host key it already knows, even
-if the server offers key formats that PuTTY would otherwise prefer,
-to avoid host key prompts. As a result, if you've been using a server
-for some years, you may still be using an older key than a new user
-would use, due to server upgrades in the meantime. The SSH protocol
-unfortunately does not have organised facilities for host key migration
-and rollover, but this allows you to \I{host keys, upgrading}manually
-upgrade.
+Normally, PuTTY will carry on using a host key it already knows for
+new sessions, even if the server starts offering key formats that
+PuTTY would otherwise prefer, to avoid host key prompts. As a result,
+if you've been using a server for some years, you may still be using
+an older type of key than a new user would use, due to server
+upgrades in the meantime. The SSH protocol unfortunately does not
+have organised facilities for host key migration and rollover, but
+this allows you to \I{host keys, upgrading}manually upgrade.
 }
 
 \b \I{Break, SSH special command}Break
