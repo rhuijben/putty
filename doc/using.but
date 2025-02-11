@@ -807,7 +807,7 @@ PSFTP.
 \S2{using-cmdline-m} \i\c{\-m}: \I{reading commands from a file}read
 a remote command or script from a file
 
-The \i\c{\-m} option performs a similar function to the \q{\ii{Remote
+The \c{\-m} option performs a similar function to the \q{\ii{Remote
 command}} box in the SSH panel of the PuTTY configuration box (see
 \k{config-command}). However, the \c{\-m} option expects to be given
 a local file name, and it will read a command from that file.

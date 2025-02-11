@@ -320,7 +320,7 @@ channel.
 \dd Do not sanitise server data written to Plink's standard output
 channel.
 
-\S2{plink-option-antispoof} \i{\-no\-antispoof}: turn off authentication spoofing protection prompt
+\S2{plink-option-antispoof} \I{-no-antispoof-plink}\c{\-no\-antispoof}: turn off authentication spoofing protection prompt
 
 In SSH, some possible server authentication methods require user input
 (for example, password authentication, or entering a private key
