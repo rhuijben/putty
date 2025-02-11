@@ -970,7 +970,7 @@ functionality as port forwarding, so it will not work if your server
 administrator has disabled port forwarding.
 
 (The option is named \c{-nc} after the Unix program
-\W{http://www.vulnwatch.org/netcat/}\c{nc}, short for \q{netcat}.
+\W{https://en.wikipedia.org/wiki/Netcat}\c{nc}, short for \q{netcat}.
 The command \cq{plink host1 -nc host2:port} is very similar in
 functionality to \cq{plink host1 nc host2 port}, which invokes
 \c{nc} on the server and tells it to connect to the specified
