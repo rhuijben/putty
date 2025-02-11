@@ -577,10 +577,10 @@ detect or guess whether the service it is talking to is a real
 Telnet service or not; PuTTY prefers to be told for certain.
 
 In order to make a debugging connection to a service of this type,
-you simply select the fourth protocol name, \I{\q{Raw}
-protocol}\q{Raw}, from the \q{Protocol} buttons in the \q{Session}
-configuration panel. (See \k{config-hostname}.) You can then enter a
-host name and a port number, and make the connection.
+select the \I{\q{Raw} protocol}\q{Raw} option from the
+\q{Connection type} controls in the \q{Session} configuration panel
+(it's in the drop-down). (See \k{config-hostname}.) You can then enter
+a host name and a port number, and make the connection.
 
 \H{using-telnet} Connecting using the \i{Telnet} protocol
 
@@ -744,9 +744,9 @@ Most of these options are not available in the file transfer tools
 PSCP and PSFTP (which only work with the SSH protocol and the bare
 ssh-connection protocol).
 
-These options are equivalent to the \i{protocol selection} buttons
-in the Session panel of the PuTTY configuration box (see
-\k{config-hostname}).
+These options are equivalent to the \i{protocol selection} controls
+(\q{Connection type}) in the Session panel of the PuTTY configuration
+box (see \k{config-hostname}).
 
 \S2{using-cmdline-v} \i\c{\-v}: increase verbosity
 
