@@ -7,7 +7,7 @@ MODE = # override to -it on command line for opaque testing
 
 PAMS = $(foreach I,$(ICONS),$(foreach S,$(SIZES),$(I)-$(S).pam))
 MONOPAMS = $(foreach I,$(ICONS),$(foreach S,$(SIZES),$(I)-$(S)-mono.pam))
-TRUEPAMS = $(foreach I,$(ICONS),$(foreach S,$(SIZES),$(I)-$(S)-true.pam))
+TRUEPAMS = $(foreach I,puttyins,$(foreach S,$(SIZES),$(I)-$(S)-true.pam))
 
 PNGS = $(patsubst %.pam,%.png,$(PAMS))
 MONOPNGS = $(patsubst %.pam,%.png,$(MONOPAMS))
@@ -22,7 +22,7 @@ CICONS = xpmputty.c xpmpucfg.c xpmpterm.c xpmptcfg.c
 
 base: icos cicons
 
-all: pngs monopngs base icns svgs # truepngs currently disabled by default
+all: pngs monopngs base icns svgs truepngs
 
 pngs: $(PNGS)
 monopngs: $(MONOPNGS)
