@@ -276,6 +276,7 @@ def sysbox(size):
     toret = SVGgroup([background, hl_dark, hl_light, floppy, outline])
     toret.props.sysboxheight = height
     toret.props.borderthickness = 1 # FIXME
+    toret.props.ytop = max(y for (x,y) in background_coords)
     return toret
 
 def monitor(size):
@@ -287,7 +288,7 @@ def monitor(size):
     botsurround = 2*size
     sheight = height - surround - botsurround
     swidth = width - 2*surround
-    depth = 2*size
+    depth = 1.6*size
     highlight = surround/2
     shadow = 0.5*size
 
@@ -342,6 +343,7 @@ def monitor(size):
     # shadow on the top and left. I think that looks very slightly nicer.
     sbb = (surround+shadow, botsurround, width-surround, height-surround-shadow)
     toret.props.screencentre = ((sbb[0]+sbb[2])/2, (sbb[1]+sbb[3])/2)
+    toret.props.ybackcorner = depth
     return toret
 
 def computer(size):
@@ -353,7 +355,7 @@ def computer(size):
     mb = m.bbox()
     sb = s.bbox()
     xoff = mb[0] - sb[0] + x
-    yoff = mb[1] - sb[1] + y
+    yoff = s.props.ytop - m.props.ybackcorner
     toret = SVGgroup([s, m], [(0,0), (xoff,yoff)])
     toret.props.screencentre = (m.props.screencentre[0]+xoff,
                                 m.props.screencentre[1]+yoff)
