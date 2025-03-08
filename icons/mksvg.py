@@ -844,8 +844,8 @@ def pageant_icon(size):
     # Determine the relative coordinates of the computer and hat. We
     # do this by first centring one on the other, then adjusting by
     # hand.
-    xrel = (cbb[0]+cbb[2]-hbb[0]-hbb[2])/2 + 2*size
-    yrel = (cbb[1]+cbb[3]-hbb[1]-hbb[3])/2 + 12*size
+    xrel = (cbb[0]+cbb[2]-hbb[0]-hbb[2])/2 + 0.7*size
+    yrel = (cbb[1]+cbb[3]-hbb[1]-hbb[3])/2 + 12.5*size
 
     both = SVGgroup([c, ht], [(0,0), (xrel,yrel)])
 
