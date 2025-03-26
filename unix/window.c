@@ -2130,10 +2130,27 @@ void input_method_preedit_start_event(GtkIMContext *imc, gpointer data)
 void input_method_preedit_changed_event(GtkIMContext *imc, gpointer data)
 {
     GtkFrontend *inst = (GtkFrontend *)data;
-
+    gint cursor_pos;
+    gchar *preedit_string;
 #ifdef KEY_EVENT_DIAGNOSTICS
-    debug(" - IM preedit-changed event\n");
+    char *string_string = dupstr("");
+    int i;
 #endif
+
+    gtk_im_context_get_preedit_string(imc, &preedit_string, NULL, &cursor_pos);
+#ifdef KEY_EVENT_DIAGNOSTICS
+    for (i = 0; preedit_string[i]; i++) {
+        char *old = string_string;
+        string_string = dupprintf("%s%s%02x", string_string,
+                                  string_string[0] ? " " : "",
+                                  (unsigned)preedit_string[i] & 0xFF);
+        sfree(old);
+    }
+    debug(" - IM preedit-changed event in UTF-8 = [%s] cursor_pos=%d\n",
+          string_string, (int)cursor_pos);
+    sfree(string_string);
+#endif
+    g_free(preedit_string);
 }
 
 void input_method_preedit_end_event(GtkIMContext *imc, gpointer data)
