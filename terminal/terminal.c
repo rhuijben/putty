@@ -8114,5 +8114,15 @@ void term_notify_window_size_pixels(Terminal *term, int x, int y)
  */
 void term_set_preedit_text(Terminal *term, char *preedit_text)
 {
-    debug("Pre-edit: %s\n", preedit_text);
+    BinarySource src[1];
+
+    if (preedit_text != NULL) {
+        debug("Pre-edit:");
+        BinarySource_BARE_INIT(src, preedit_text, strlen(preedit_text));
+        while (get_avail(src))
+            debug(" U+%04X", decode_utf8(src, NULL));
+        debug("\n");
+    } else {
+        debug("Pre-edit finished\n");
+    }
 }
