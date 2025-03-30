@@ -2150,6 +2150,7 @@ void input_method_preedit_changed_event(GtkIMContext *imc, gpointer data)
           string_string, (int)cursor_pos);
     sfree(string_string);
 #endif
+    term_set_preedit_text(inst->term, preedit_string);
     g_free(preedit_string);
 }
 
@@ -2160,6 +2161,7 @@ void input_method_preedit_end_event(GtkIMContext *imc, gpointer data)
 #ifdef KEY_EVENT_DIAGNOSTICS
     debug(" - IM preedit-end event\n");
 #endif
+    term_set_preedit_text(inst->term, NULL);
 }
 #endif
 

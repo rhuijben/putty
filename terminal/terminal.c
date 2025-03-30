@@ -8106,3 +8106,13 @@ void term_notify_window_size_pixels(Terminal *term, int x, int y)
     term->winpixsize_x = x;
     term->winpixsize_y = y;
 }
+
+/*
+ * Set the pre-edit text as required by an input method.  preedit_text
+ * is expected to be in UTF-8.  It's NULL if no pre-edit text is
+ * required.  It's owned by the caller and must not be freed here.
+ */
+void term_set_preedit_text(Terminal *term, char *preedit_text)
+{
+    debug("Pre-edit: %s\n", preedit_text);
+}
