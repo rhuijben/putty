@@ -6199,6 +6199,9 @@ static void do_paint(Terminal *term)
 
             if (i == our_curs_y && j == our_curs_x)
                 tattr |= cursor;
+                if (term->preedit_char != -1)
+                    tchar = term->preedit_char;
+            }
 
             /* FULL-TERMCHAR */
             newline[j].attr = tattr;
@@ -8115,19 +8118,20 @@ void term_notify_window_size_pixels(Terminal *term, int x, int y)
 void term_set_preedit_text(Terminal *term, char *preedit_text)
 {
     BinarySource src[1];
-    pos oldcurs = term->curs;
 
     if (preedit_text != NULL) {
         debug("Pre-edit:");
         BinarySource_BARE_INIT(src, preedit_text, strlen(preedit_text));
-        while (get_avail(src)) {
+        if (get_avail(src)) {
             unsigned int c = decode_utf8(src, NULL);
             debug(" U+%04X", c);
-            term_display_graphic_char(term, c);
-        }
+            term->preedit_char = c;
+        } else
+            term->preedit_char = -1;
         debug("\n");
-        term->curs = oldcurs;
     } else {
         debug("Pre-edit finished\n");
+        term->preedit_char = -1;
     }
+    seen_disp_event(term);
 }
