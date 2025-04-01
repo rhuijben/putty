@@ -2096,6 +2096,8 @@ Terminal *term_init(Conf *myconf, struct unicode_data *ucsdata, TermWin *win)
 
     palette_reset(term, false);
 
+    term->preedit_char = -1;
+
     return term;
 }
 
@@ -6094,7 +6096,7 @@ static void do_paint(Terminal *term)
     /* The normal screen data */
     for (i = 0; i < term->rows; i++) {
         termline *ldata;
-        termchar *lchars;
+        termchar *lchars, preedit_termchars[2];
         bool dirty_line, dirty_run, selected;
         unsigned long attr = 0, cset = 0;
         int start = 0;
@@ -6104,6 +6106,7 @@ static void do_paint(Terminal *term)
         bool dirtyrect;
         int *backward;
         truecolour tc;
+        int preedit_width = 0, preedit_start = 0, preedit_end = 0;
 
         scrpos.y = i + term->disptop;
         ldata = lineptr(scrpos.y);
@@ -6117,6 +6120,27 @@ static void do_paint(Terminal *term)
             backward = NULL;
         }
 
+        /* Work out if and where to display pre-edit text. */
+        if (i == our_curs_y && term->preedit_char != -1) {
+            preedit_width = term_char_width(term, term->preedit_char);
+            debug("preedit_width = %d\n", preedit_width);
+            preedit_start = our_curs_x;
+            preedit_end = preedit_start + preedit_width;
+            if (preedit_end > term->cols) {
+                preedit_end = term->cols;
+                preedit_start = preedit_end - preedit_width;
+            }
+            for (j = 0; j < preedit_width; j++) {
+                /* FULL-TERMCHAR */
+                preedit_termchars[j].chr = !j ? term->preedit_char : UCSWIDE;
+                preedit_termchars[j].attr = 0;
+                preedit_termchars[j].truecolour.fg.enabled = false;
+                preedit_termchars[j].truecolour.bg.enabled = false;
+                preedit_termchars[j].cc_next = 0;
+            }
+            our_curs_x = preedit_start;
+        }
+
         /*
          * First loop: work along the line deciding what we want
          * each character cell to look like.
@@ -6124,7 +6148,11 @@ static void do_paint(Terminal *term)
         for (j = 0; j < term->cols; j++) {
             unsigned long tattr, tchar;
             termchar *d = lchars + j;
+            bool in_preedit = j >= preedit_start && j < preedit_end;
             scrpos.x = backward ? backward[j] : j;
+
+            if (in_preedit)
+                d = preedit_termchars + j - preedit_start;
 
             tchar = d->chr;
             tattr = d->attr;
@@ -6160,7 +6188,8 @@ static void do_paint(Terminal *term)
                 tchar = term->ucsdata->unitab_scoacs[tchar&0xFF];
                 break;
             }
-            if (j < term->cols-1 && d[1].chr == UCSWIDE)
+            if (j < (in_preedit ? preedit_end : term->cols) - 1
+                && d[1].chr == UCSWIDE)
                 tattr |= ATTR_WIDE;
 
             /* Video reversing things */
@@ -6199,9 +6228,6 @@ static void do_paint(Terminal *term)
 
             if (i == our_curs_y && j == our_curs_x)
                 tattr |= cursor;
-                if (term->preedit_char != -1)
-                    tchar = term->preedit_char;
-            }
 
             /* FULL-TERMCHAR */
             newline[j].attr = tattr;
