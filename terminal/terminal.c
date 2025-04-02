@@ -6131,12 +6131,8 @@ static void do_paint(Terminal *term)
                 preedit_start = preedit_end - preedit_width;
             }
             for (j = 0; j < preedit_width; j++) {
-                /* FULL-TERMCHAR */
+                preedit_termchars[j] = term->basic_erase_char;
                 preedit_termchars[j].chr = !j ? term->preedit_char : UCSWIDE;
-                preedit_termchars[j].attr = 0;
-                preedit_termchars[j].truecolour.fg.enabled = false;
-                preedit_termchars[j].truecolour.bg.enabled = false;
-                preedit_termchars[j].cc_next = 0;
             }
             our_curs_x = preedit_start;
         }
