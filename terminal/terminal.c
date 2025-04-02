@@ -2096,8 +2096,6 @@ Terminal *term_init(Conf *myconf, struct unicode_data *ucsdata, TermWin *win)
 
     palette_reset(term, false);
 
-    term->preedit_char = -1;
-
     return term;
 }
 
@@ -2161,6 +2159,8 @@ void term_free(Terminal *term)
     /* In case a term_userpass_state is still around */
     if (term->userpass_state)
         term_userpass_state_free(term->userpass_state);
+
+    sfree(term->preedit_termchars);
 
     sfree(term);
 }
@@ -6096,7 +6096,7 @@ static void do_paint(Terminal *term)
     /* The normal screen data */
     for (i = 0; i < term->rows; i++) {
         termline *ldata;
-        termchar *lchars, preedit_termchars[2];
+        termchar *lchars;
         bool dirty_line, dirty_run, selected;
         unsigned long attr = 0, cset = 0;
         int start = 0;
@@ -6106,7 +6106,7 @@ static void do_paint(Terminal *term)
         bool dirtyrect;
         int *backward;
         truecolour tc;
-        int preedit_width = 0, preedit_start = 0, preedit_end = 0;
+        int preedit_start = 0, preedit_end = 0;
 
         scrpos.y = i + term->disptop;
         ldata = lineptr(scrpos.y);
@@ -6121,18 +6121,13 @@ static void do_paint(Terminal *term)
         }
 
         /* Work out if and where to display pre-edit text. */
-        if (i == our_curs_y && term->preedit_char != -1) {
-            preedit_width = term_char_width(term, term->preedit_char);
-            debug("preedit_width = %d\n", preedit_width);
+        if (i == our_curs_y && term->preedit_termchars != NULL) {
+            debug("preedit_width = %d\n", term->preedit_width);
             preedit_start = our_curs_x;
-            preedit_end = preedit_start + preedit_width;
+            preedit_end = preedit_start + term->preedit_width;
             if (preedit_end > term->cols) {
                 preedit_end = term->cols;
-                preedit_start = preedit_end - preedit_width;
-            }
-            for (j = 0; j < preedit_width; j++) {
-                preedit_termchars[j] = term->basic_erase_char;
-                preedit_termchars[j].chr = !j ? term->preedit_char : UCSWIDE;
+                preedit_start = preedit_end - term->preedit_width;
             }
             our_curs_x = preedit_start;
         }
@@ -6148,7 +6143,7 @@ static void do_paint(Terminal *term)
             scrpos.x = backward ? backward[j] : j;
 
             if (in_preedit)
-                d = preedit_termchars + j - preedit_start;
+                d = term->preedit_termchars + j - preedit_start;
 
             tchar = d->chr;
             tattr = d->attr;
@@ -8139,21 +8134,36 @@ void term_notify_window_size_pixels(Terminal *term, int x, int y)
  */
 void term_set_preedit_text(Terminal *term, char *preedit_text)
 {
-    BinarySource src[1];
-
+    sfree(term->preedit_termchars);
+    term->preedit_termchars = NULL;
+    term->preedit_width = 0;
     if (preedit_text != NULL) {
+        BinarySource src[1];
+        int i;
+
         debug("Pre-edit:");
         BinarySource_BARE_INIT(src, preedit_text, strlen(preedit_text));
-        if (get_avail(src)) {
+        while (get_avail(src))
+            term->preedit_width +=
+                term_char_width(term, decode_utf8(src, NULL));
+        term->preedit_termchars = snewn(term->preedit_width, termchar);
+        BinarySource_REWIND(src);
+        for (i = 0; i < term->preedit_width; i++) {
             unsigned int c = decode_utf8(src, NULL);
             debug(" U+%04X", c);
-            term->preedit_char = c;
-        } else
-            term->preedit_char = -1;
+            if (term_char_width(term, c) >= 1) {
+                term->preedit_termchars[i] = term->basic_erase_char;
+                term->preedit_termchars[i].chr = c;
+                if (term_char_width(term, c) >= 2) {
+                    term->preedit_termchars[i+1] = term->basic_erase_char;
+                    term->preedit_termchars[i+1].chr = UCSWIDE;
+                    i++;
+                }
+            }
+        }
         debug("\n");
     } else {
         debug("Pre-edit finished\n");
-        term->preedit_char = -1;
     }
     seen_disp_event(term);
 }
