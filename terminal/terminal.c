@@ -6017,7 +6017,7 @@ static void do_paint_draw(Terminal *term, termline *ldata, int x, int y,
             IS_REGIONAL_INDICATOR_LETTER(ch[1]))
             attr |= ATTR_WIDE | TATTR_COMBINING;
         win_draw_text(term->win, x, y, ch, ccount, attr, ldata->lattr, tc);
-        if (attr & (TATTR_ACTCURS | TATTR_PASCURS))
+        if (attr & (ATTR_ACTCURS | ATTR_PASCURS))
             win_draw_cursor(term->win, x, y, ch, ccount,
                             attr, ldata->lattr, tc);
     }
@@ -6053,13 +6053,13 @@ static void do_paint(Terminal *term)
     if (term->cursor_on) {
         if (term->has_focus) {
             if (term->cblinker || !term->blink_cur)
-                cursor = TATTR_ACTCURS;
+                cursor = ATTR_ACTCURS;
             else
                 cursor = 0;
         } else
-            cursor = TATTR_PASCURS;
+            cursor = ATTR_PASCURS;
         if (term->wrapnext)
-            cursor |= TATTR_RIGHTCURS;
+            cursor |= ATTR_RIGHTCURS;
     } else
         cursor = 0;
     our_curs_y = term->curs.y - term->disptop;
