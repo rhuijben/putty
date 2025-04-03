@@ -215,7 +215,7 @@ extern const int colour_indices_oscp_to_osc4[OSCP_NCOLOURS];
 
 #define DATTR_STARTRUN      0x80000000UL   /* start of redraw run */
 
-#define TDATTR_MASK         0xF0000000UL
+#define TDATTR_MASK         0x80000000UL
 #define TATTR_MASK (TDATTR_MASK)
 #define DATTR_MASK (TDATTR_MASK)
 

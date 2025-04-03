@@ -2066,7 +2066,6 @@ Terminal *term_init(Conf *myconf, struct unicode_data *ucsdata, TermWin *win)
 
     term_copy_stuff_from_conf(term);
 
-    term->dispcursx = term->dispcursy = -1;
     deselect(term);
     term->rows = term->cols = -1;
     power_on(term, true);
@@ -2297,7 +2296,6 @@ void term_size(Terminal *term, int newrows, int newcols, int newsavelines)
     }
     sfree(term->disptext);
     term->disptext = newdisp;
-    term->dispcursx = term->dispcursy = -1;
 
     /* Make a new alternate screen. */
     newalt = newtree234(NULL);
@@ -6092,27 +6090,6 @@ static void do_paint(Terminal *term)
         unlineptr(ldata);
     }
 
-    /*
-     * If the cursor is not where it was last time we painted, and
-     * its previous position is visible on screen, invalidate its
-     * previous position.
-     */
-    if (term->dispcursy >= 0 &&
-        (term->curstype != cursor ||
-         term->dispcursy != our_curs_y ||
-         term->dispcursx != our_curs_x)) {
-        termchar *dispcurs = term->disptext[term->dispcursy]->chars +
-            term->dispcursx;
-
-        if (term->dispcursx > 0 && dispcurs->chr == UCSWIDE)
-            dispcurs[-1].attr |= ATTR_INVALID;
-        if (term->dispcursx < term->cols-1 && dispcurs[1].chr == UCSWIDE)
-            dispcurs[1].attr |= ATTR_INVALID;
-        dispcurs->attr |= ATTR_INVALID;
-
-        term->curstype = 0;
-    }
-    term->dispcursx = term->dispcursy = -1;
 
     /* The normal screen data */
     for (i = 0; i < term->rows; i++) {
@@ -6220,12 +6197,8 @@ static void do_paint(Terminal *term)
             } else if (term->disptext[i]->chars[j].attr & ATTR_NARROW)
                 tattr |= ATTR_NARROW;
 
-            if (i == our_curs_y && j == our_curs_x) {
+            if (i == our_curs_y && j == our_curs_x)
                 tattr |= cursor;
-                term->curstype = cursor;
-                term->dispcursx = j;
-                term->dispcursy = i;
-            }
 
             /* FULL-TERMCHAR */
             newline[j].attr = tattr;
