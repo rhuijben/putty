@@ -2160,7 +2160,7 @@ void term_free(Terminal *term)
     if (term->userpass_state)
         term_userpass_state_free(term->userpass_state);
 
-    sfree(term->preedit_termchars);
+    freetermline(term->preedit_termline);
 
     sfree(term);
 }
@@ -6121,13 +6121,13 @@ static void do_paint(Terminal *term)
         }
 
         /* Work out if and where to display pre-edit text. */
-        if (i == our_curs_y && term->preedit_termchars != NULL) {
-            debug("preedit_width = %d\n", term->preedit_width);
+        if (i == our_curs_y && term->preedit_termline != NULL) {
+            debug("preedit_width = %d\n", term->preedit_termline->cols);
             preedit_start = our_curs_x;
-            preedit_end = preedit_start + term->preedit_width;
+            preedit_end = preedit_start + term->preedit_termline->cols;
             if (preedit_end > term->cols) {
                 preedit_end = term->cols;
-                preedit_start = preedit_end - term->preedit_width;
+                preedit_start = preedit_end - term->preedit_termline->cols;
             }
             our_curs_x = preedit_start;
         }
@@ -6143,7 +6143,7 @@ static void do_paint(Terminal *term)
             scrpos.x = backward ? backward[j] : j;
 
             if (in_preedit)
-                d = term->preedit_termchars + j - preedit_start;
+                d = term->preedit_termline->chars + j - preedit_start;
 
             tchar = d->chr;
             tattr = d->attr;
@@ -6282,7 +6282,7 @@ static void do_paint(Terminal *term)
             bool in_preedit = j >= preedit_start && j < preedit_end;
 
             if (in_preedit)
-                d = term->preedit_termchars + j - preedit_start;
+                d = term->preedit_termline->chars + j - preedit_start;
 
             tattr = newline[j].attr;
             tchar = newline[j].chr;
@@ -8138,29 +8138,25 @@ void term_notify_window_size_pixels(Terminal *term, int x, int y)
  */
 void term_set_preedit_text(Terminal *term, char *preedit_text)
 {
-    sfree(term->preedit_termchars);
-    term->preedit_termchars = NULL;
-    term->preedit_width = 0;
+    freetermline(term->preedit_termline);
+    term->preedit_termline = NULL;
     if (preedit_text != NULL) {
         BinarySource src[1];
-        int i;
+        int width = 0, i;
 
         debug("Pre-edit:");
         BinarySource_BARE_INIT(src, preedit_text, strlen(preedit_text));
         while (get_avail(src))
-            term->preedit_width +=
-                term_char_width(term, decode_utf8(src, NULL));
-        term->preedit_termchars = snewn(term->preedit_width, termchar);
+            width += term_char_width(term, decode_utf8(src, NULL));
+        term->preedit_termline = newtermline(term, width, false);
         BinarySource_REWIND(src);
-        for (i = 0; i < term->preedit_width; i++) {
+        for (i = 0; i < width; i++) {
             unsigned int c = decode_utf8(src, NULL);
             debug(" U+%04X", c);
             if (term_char_width(term, c) >= 1) {
-                term->preedit_termchars[i] = term->basic_erase_char;
-                term->preedit_termchars[i].chr = c;
+                term->preedit_termline->chars[i].chr = c;
                 if (term_char_width(term, c) >= 2) {
-                    term->preedit_termchars[i+1] = term->basic_erase_char;
-                    term->preedit_termchars[i+1].chr = UCSWIDE;
+                    term->preedit_termline->chars[i+1].chr = UCSWIDE;
                     i++;
                 }
             }
