@@ -8145,20 +8145,26 @@ void term_set_preedit_text(Terminal *term, char *preedit_text)
         int width = 0, i;
 
         debug("Pre-edit:");
+        term->preedit_termline = newtermline(term, 0, false);
         BinarySource_BARE_INIT(src, preedit_text, strlen(preedit_text));
-        while (get_avail(src))
-            width += term_char_width(term, decode_utf8(src, NULL));
-        term->preedit_termline = newtermline(term, width, false);
-        BinarySource_REWIND(src);
-        for (i = 0; i < width; i++) {
+        while (get_avail(src)) {
             unsigned int c = decode_utf8(src, NULL);
             debug(" U+%04X", c);
-            if (term_char_width(term, c) >= 1) {
-                term->preedit_termline->chars[i].chr = c;
-                if (term_char_width(term, c) >= 2) {
-                    term->preedit_termline->chars[i+1].chr = UCSWIDE;
-                    i++;
-                }
+            switch (term_char_width(term, c)) {
+              case -1:
+                /* Ignore control characters. */
+                break;
+              case 1:
+                width += 1;
+                resizeline(term, term->preedit_termline, width);
+                term->preedit_termline->chars[width - 1].chr = c;
+                break;
+              case 2:
+                width += 2;
+                resizeline(term, term->preedit_termline, width);
+                term->preedit_termline->chars[width - 2].chr = c;
+                term->preedit_termline->chars[width - 1].chr = UCSWIDE;
+                break;
             }
         }
         debug("\n");
