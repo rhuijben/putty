@@ -6279,6 +6279,10 @@ static void do_paint(Terminal *term)
             unsigned long tattr, tchar;
             bool break_run, do_copy, next_run_dirty = false;
             termchar *d = lchars + j;
+            bool in_preedit = j >= preedit_start && j < preedit_end;
+
+            if (in_preedit)
+                d = term->preedit_termchars + j - preedit_start;
 
             tattr = newline[j].attr;
             tchar = newline[j].chr;
