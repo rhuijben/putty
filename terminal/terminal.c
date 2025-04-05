@@ -6122,7 +6122,6 @@ static void do_paint(Terminal *term)
 
         /* Work out if and where to display pre-edit text. */
         if (i == our_curs_y && term->preedit_termline != NULL) {
-            debug("preedit_width = %d\n", term->preedit_termline->cols);
             preedit_start = our_curs_x;
             preedit_end = preedit_start + term->preedit_termline->cols;
             if (preedit_end > term->cols) {
@@ -8148,12 +8147,10 @@ void term_set_preedit_text(Terminal *term, char *preedit_text)
         BinarySource src[1];
         int width = 0, i;
 
-        debug("Pre-edit:");
         term->preedit_termline = newtermline(term, 0, false);
         BinarySource_BARE_INIT(src, preedit_text, strlen(preedit_text));
         while (get_avail(src)) {
             unsigned int c = decode_utf8(src, NULL);
-            debug(" U+%04X", c);
             switch (term_char_width(term, c)) {
               case -1:
                 /* Ignore control characters. */
@@ -8181,9 +8178,6 @@ void term_set_preedit_text(Terminal *term, char *preedit_text)
                 break;
             }
         }
-        debug("\n");
-    } else {
-        debug("Pre-edit finished\n");
     }
     seen_disp_event(term);
 }
