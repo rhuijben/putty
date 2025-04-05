@@ -6129,7 +6129,11 @@ static void do_paint(Terminal *term)
                 preedit_end = term->cols;
                 preedit_start = preedit_end - term->preedit_termline->cols;
             }
-            our_curs_x = preedit_start;
+            if (term->preedit_termline->chars[term->preedit_termline->cols - 1]
+                .chr == UCSWIDE)
+                our_curs_x = preedit_end - 2;
+            else
+                our_curs_x = preedit_end - 1;
         }
 
         /*
