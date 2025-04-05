@@ -8154,6 +8154,16 @@ void term_set_preedit_text(Terminal *term, char *preedit_text)
               case -1:
                 /* Ignore control characters. */
                 break;
+              case 0:
+                if (width == 0) {
+                    width = 1;
+                    resizeline(term, term->preedit_termline, width);
+                }
+                if (term->preedit_termline->chars[width - 1].chr == UCSWIDE)
+                    add_cc(term->preedit_termline, width - 2, c);
+                else
+                    add_cc(term->preedit_termline, width - 1, c);
+                break;
               case 1:
                 width += 1;
                 resizeline(term, term->preedit_termline, width);
