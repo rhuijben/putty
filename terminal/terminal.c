@@ -8145,7 +8145,7 @@ void term_set_preedit_text(Terminal *term, char *preedit_text)
     term->preedit_termline = NULL;
     if (preedit_text != NULL) {
         BinarySource src[1];
-        int width = 0, i;
+        int width = 0;
 
         term->preedit_termline = newtermline(term, 0, false);
         BinarySource_BARE_INIT(src, preedit_text, strlen(preedit_text));
