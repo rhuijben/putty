@@ -953,7 +953,6 @@ static gint draw_area(GtkWidget *widget, cairo_t *cr, gpointer data)
      * inst->surface to the window.
      */
     if (inst->surface) {
-        GdkRectangle dirtyrect;
         cairo_surface_t *target_surface;
         double orig_sx, orig_sy;
         cairo_matrix_t m;
@@ -982,12 +981,8 @@ static gint draw_area(GtkWidget *widget, cairo_t *cr, gpointer data)
         cairo_surface_set_device_scale(target_surface, 1.0, 1.0);
         cairo_translate(cr, m.x0 * (orig_sx - 1.0), m.y0 * (orig_sy - 1.0));
 
-        gdk_cairo_get_clip_rectangle(cr, &dirtyrect);
-
         cairo_set_source_surface(cr, inst->surface, 0, 0);
-        cairo_rectangle(cr, dirtyrect.x, dirtyrect.y,
-                        dirtyrect.width, dirtyrect.height);
-        cairo_fill(cr);
+        cairo_paint(cr);
 
         cairo_surface_set_device_scale(target_surface, orig_sx, orig_sy);
     }
