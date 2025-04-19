@@ -819,8 +819,14 @@ static void drawing_area_setup(GtkFrontend *inst, int width, int height)
         inst->surface = NULL;
     }
 
+#if GTK_CHECK_VERSION(2,22,0)
+    inst->surface = gdk_window_create_similar_surface(
+        gtk_widget_get_window(inst->area),
+        CAIRO_CONTENT_COLOR, inst->backing_w, inst->backing_h);
+#else
     inst->surface = cairo_image_surface_create(
         CAIRO_FORMAT_ARGB32, inst->backing_w, inst->backing_h);
+#endif
 #endif
 
     draw_backing_rect(inst);
