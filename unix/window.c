@@ -108,21 +108,11 @@ struct GtkFrontend {
      * re-blit an appropriate rectangle from this pixmap.
      */
     GdkPixmap *pixmap;
-#endif
-#ifdef DRAW_TEXT_CAIRO
+#else
     /*
-     * If we're drawing using Cairo, we cache the same image on the
-     * client side in a Cairo surface.
-     *
-     * In GTK2+Cairo, this happens _as well_ as having the server-side
-     * pixmap cache above; in GTK3+Cairo, server-side pixmaps are
-     * deprecated, so we _just_ have this client-side cache. In the
-     * latter case that means we have to transmit a big wodge of
-     * bitmap data over the X connection on every expose event; but
-     * GTK3 apparently deliberately provides no way to avoid that
-     * inefficiency, and at least this way we don't _also_ have to
-     * redo any font rendering just because the window was temporarily
-     * covered.
+     * If we're avoiding GdkPixmaps, we cache the same image in a
+     * Cairo surface.  Under X11, that surface will probably be a
+     * server-side pixmap.
      */
     cairo_surface_t *surface;
 #endif
@@ -811,9 +801,7 @@ static void drawing_area_setup(GtkFrontend *inst, int width, int height)
 
     inst->pixmap = gdk_pixmap_new(gtk_widget_get_window(inst->area),
                                   inst->backing_w, inst->backing_h, -1);
-#endif
-
-#ifdef DRAW_TEXT_CAIRO
+#else
     if (inst->surface) {
         cairo_surface_destroy(inst->surface);
         inst->surface = NULL;
@@ -3592,10 +3580,15 @@ static bool gtkwin_setup_draw_ctx(TermWin *tw)
 #ifdef DRAW_TEXT_CAIRO
     if (inst->uctx.type == DRAWTYPE_CAIRO) {
         inst->uctx.u.cairo.widget = GTK_WIDGET(inst->area);
-        /* If we're doing Cairo drawing, we expect inst->surface to
-         * exist, and we draw to that first, regardless of whether we
-         * subsequently copy the results to inst->pixmap. */
+        /*
+         * If we're doing Cairo drawing, we draw to the target pixmap
+         * if there is one, and otherwise to the backing surface.
+         */
+#ifdef NO_BACKING_PIXMAPS
         inst->uctx.u.cairo.cr = cairo_create(inst->surface);
+#else
+        inst->uctx.u.cairo.cr = gdk_cairo_create(inst->pixmap);
+#endif
         cairo_scale(inst->uctx.u.cairo.cr, inst->scale, inst->scale);
         cairo_setup_draw_ctx(inst);
     }
@@ -3621,20 +3614,6 @@ static void gtkwin_free_draw_ctx(TermWin *tw)
 
 static void draw_update(GtkFrontend *inst, int x, int y, int w, int h)
 {
-#if defined DRAW_TEXT_CAIRO && !defined NO_BACKING_PIXMAPS
-    if (inst->uctx.type == DRAWTYPE_CAIRO) {
-        /*
-         * If inst->surface and inst->pixmap both exist, then we've
-         * just drawn new content to the former which we must copy to
-         * the latter.
-         */
-        cairo_t *cr = gdk_cairo_create(inst->pixmap);
-        cairo_set_source_surface(cr, inst->surface, 0, 0);
-        cairo_rectangle(cr, x, y, w, h);
-        cairo_fill(cr);
-        cairo_destroy(cr);
-    }
-#endif
 
     /*
      * Now we just queue a window redraw, which will cause
