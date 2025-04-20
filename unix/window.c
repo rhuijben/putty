@@ -812,8 +812,11 @@ static void drawing_area_setup(GtkFrontend *inst, int width, int height)
         gtk_widget_get_window(inst->area),
         CAIRO_CONTENT_COLOR, inst->backing_w, inst->backing_h);
 #else
-    inst->surface = cairo_image_surface_create(
-        CAIRO_FORMAT_ARGB32, inst->backing_w, inst->backing_h);
+    cairo_t *tmp_cr = gdk_cairo_create(gtk_widget_get_window(inst->area));
+    inst->surface = cairo_surface_create_similar(
+        cairo_get_target(tmp_cr),
+        CAIRO_CONTENT_COLOR, inst->backing_w, inst->backing_h);
+    cairo_destroy(tmp_cr);
 #endif
 #endif
 
