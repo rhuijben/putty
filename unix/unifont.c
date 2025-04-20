@@ -1295,7 +1295,7 @@ static char *x11font_size_increment(unifont *font, int increment)
 #if GTK_CHECK_VERSION(2,0,0)
 
 /* ----------------------------------------------------------------------
- * Pango font implementation (for GTK 2 only).
+ * Pango font implementation (for GTK 2+ only).
  */
 
 #if defined PANGO_PRE_1POINT4 && !defined PANGO_PRE_1POINT6
@@ -2325,7 +2325,7 @@ static char *multifont_size_increment(unifont *font, int increment)
 #if GTK_CHECK_VERSION(2,0,0)
 
 /* ----------------------------------------------------------------------
- * Implementation of a unified font selector. Used on GTK 2 only;
+ * Implementation of a unified font selector. Used on GTK 2+ only;
  * for GTK 1 we still use the standard font selector.
  */
 
