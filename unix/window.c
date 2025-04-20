@@ -5356,6 +5356,15 @@ void new_session_window(Conf *conf, const char *geometry_string)
 
     inst->area = gtk_drawing_area_new();
     gtk_widget_set_name(GTK_WIDGET(inst->area), "drawing-area");
+#if !GTK_CHECK_VERSION(3,0,0)
+    /*
+     * PuTTY does its own double-buffering, so we don't really need
+     * GTK to do it as well.  GTK documentation says this is probably
+     * a bad idea from GTK 3.10 onwards, and it's officially
+     * deprecated from 3.14.  But it definitely helps in GTK 2.
+     */
+    gtk_widget_set_double_buffered(GTK_WIDGET(inst->area), false);
+#endif
 
     /*
      * Try to create the fonts for use in the window. If this fails,
