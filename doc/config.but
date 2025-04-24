@@ -1091,7 +1091,9 @@ empty box when the window loses focus; an underline or a vertical
 line becomes dotted.
 
 The \q{\ii{Cursor blinks}} option makes the cursor blink on and off. This
-works in any of the cursor modes.
+works in any of the cursor modes. (On Windows, the blink rate matches
+that configured in Control Panel; so this setting will have no effect
+if cursor blinking has been disabled system-wide.)
 
 \S{config-font} Controlling the \i{font} used in the terminal window
 
