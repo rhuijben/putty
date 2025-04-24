@@ -677,8 +677,8 @@ static void x11font_cairo_setup(
         xfi->pixmap_surface = cairo_xlib_surface_create_for_bitmap(
             disp, xfi->pixmap, ScreenOfDisplay(disp, widgetscr),
             xfi->pixwidth, xfi->pixheight);
-        gcvals.foreground = WhitePixel(disp, widgetscr);
-        gcvals.background = BlackPixel(disp, widgetscr);
+        gcvals.foreground = 1;
+        gcvals.background = 0;
         gcvals.font = xfi->xfs->fid;
         xfi->gc = XCreateGC(disp, xfi->pixmap,
                             GCForeground | GCBackground | GCFont, &gcvals);
