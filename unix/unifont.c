@@ -154,22 +154,7 @@ typedef struct x11font_individual {
     bool allocated;
 
 #ifdef DRAW_TEXT_CAIRO
-    /*
-     * A cache of glyph bitmaps downloaded from the X server when
-     * we're in Cairo rendering mode. If glyphcache itself is
-     * non-NULL, then entries in [0,nglyphs) are expected to be
-     * initialised to either NULL or a bitmap pointer.
-     */
-    struct cairo_cached_glyph *glyphcache;
-    int nglyphs;
-
-    /*
-     * X server paraphernalia for actually downloading the glyphs.
-     */
-    Pixmap pixmap;
-    cairo_surface_t *pixmap_surface; /* Cairo version of pixmap. */
     GC gc;
-    int pixwidth, pixheight, pixoriginx, pixoriginy;
 #endif
 
 } x11font_individual;
@@ -530,10 +515,6 @@ static unifont *x11font_create(GtkWidget *widget, const char *name,
         xfont->fonts[i].xfs = NULL;
         xfont->fonts[i].allocated = false;
 #ifdef DRAW_TEXT_CAIRO
-        xfont->fonts[i].glyphcache = NULL;
-        xfont->fonts[i].nglyphs = 0;
-        xfont->fonts[i].pixmap = None;
-        xfont->fonts[i].pixmap_surface = NULL;
         xfont->fonts[i].gc = None;
 #endif
     }
@@ -555,17 +536,6 @@ static void x11font_destroy(unifont *font)
 #ifdef DRAW_TEXT_CAIRO
         if (xfont->fonts[i].gc != None)
             XFreeGC(disp, xfont->fonts[i].gc);
-        if (xfont->fonts[i].pixmap_surface != NULL)
-            cairo_surface_destroy(xfont->fonts[i].pixmap_surface);
-        if (xfont->fonts[i].pixmap != None)
-            XFreePixmap(disp, xfont->fonts[i].pixmap);
-        if (xfont->fonts[i].glyphcache) {
-            int j;
-            for (j = 0; j < xfont->fonts[i].nglyphs; j++) {
-                cairo_surface_destroy(xfont->fonts[i].glyphcache[j].surface);
-            }
-            sfree(xfont->fonts[i].glyphcache);
-        }
 #endif
     }
     sfree(xfont);
@@ -659,28 +629,24 @@ static void x11font_gdk_draw_8(unifont_drawctx *ctx, x11font_individual *xfi,
 static void x11font_cairo_setup(
     unifont_drawctx *ctx, x11font_individual *xfi, Display *disp)
 {
-    if (xfi->pixmap == None) {
+
+}
+
+/*
+ * Creating an X GC requires a Drawable, so this gets deferred until
+ * we first need to draw something, and hence have something to draw
+ * on.
+ */
+static void x11font_cairo_init_gc(x11font_individual *xfi, Display *disp,
+                                  Pixmap pixmap)
+{
+    if (xfi->gc == None) {
         XGCValues gcvals;
-        GdkWindow *widgetwin = gtk_widget_get_window(ctx->u.cairo.widget);
-        int widgetscr = GDK_SCREEN_XNUMBER(gdk_window_get_screen(widgetwin));
 
-        xfi->pixwidth =
-            xfi->xfs->max_bounds.rbearing - xfi->xfs->min_bounds.lbearing;
-        xfi->pixheight =
-            xfi->xfs->max_bounds.ascent + xfi->xfs->max_bounds.descent;
-        xfi->pixoriginx = -xfi->xfs->min_bounds.lbearing;
-        xfi->pixoriginy = xfi->xfs->max_bounds.ascent;
-
-        xfi->pixmap = XCreatePixmap(
-            disp, GDK_DRAWABLE_XID(gtk_widget_get_window(ctx->u.cairo.widget)),
-            xfi->pixwidth, xfi->pixheight, 1);
-        xfi->pixmap_surface = cairo_xlib_surface_create_for_bitmap(
-            disp, xfi->pixmap, ScreenOfDisplay(disp, widgetscr),
-            xfi->pixwidth, xfi->pixheight);
         gcvals.foreground = 1;
         gcvals.background = 0;
         gcvals.font = xfi->xfs->fid;
-        xfi->gc = XCreateGC(disp, xfi->pixmap,
+        xfi->gc = XCreateGC(disp, pixmap,
                             GCForeground | GCBackground | GCFont, &gcvals);
     }
 }
@@ -703,6 +669,7 @@ static void x11font_cairo_draw_16(
      if (pixwidth > 0 && pixheight > 0) {
         pixmap = XCreatePixmap(disp, GDK_DRAWABLE_XID(widgetwin),
                                pixwidth, pixheight, 1);
+        x11font_cairo_init_gc(xfi, disp, pixmap);
         XDrawImageString16(disp, pixmap, xfi->gc,
                            -bounds.lbearing, bounds.ascent,
                            string+start, length);
@@ -741,6 +708,7 @@ static void x11font_cairo_draw_8(
      if (pixwidth > 0 && pixheight > 0) {
         pixmap = XCreatePixmap(disp, GDK_DRAWABLE_XID(widgetwin),
                                pixwidth, pixheight, 1);
+        x11font_cairo_init_gc(xfi, disp, pixmap);
         XDrawImageString(disp, pixmap, xfi->gc,
                          -bounds.lbearing, bounds.ascent,
                          string+start, length);
