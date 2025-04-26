@@ -918,8 +918,6 @@ static gboolean area_configured(
 #ifdef DRAW_TEXT_CAIRO
 static void cairo_setup_draw_ctx(GtkFrontend *inst)
 {
-    cairo_get_matrix(inst->uctx.u.cairo.cr,
-                     &inst->uctx.u.cairo.origmatrix);
     cairo_set_line_width(inst->uctx.u.cairo.cr, 1.0);
     cairo_set_line_cap(inst->uctx.u.cairo.cr, CAIRO_LINE_CAP_SQUARE);
     cairo_set_line_join(inst->uctx.u.cairo.cr, CAIRO_LINE_JOIN_MITER);
@@ -3808,31 +3806,10 @@ static void draw_stretch_before(GtkFrontend *inst, int x, int y,
 {
 #ifdef DRAW_TEXT_CAIRO
     if (inst->uctx.type == DRAWTYPE_CAIRO) {
-        cairo_matrix_t matrix;
-
-        matrix.xy = 0;
-        matrix.yx = 0;
-
-        if (wdouble) {
-            matrix.xx = 2;
-            matrix.x0 = -x;
-        } else {
-            matrix.xx = 1;
-            matrix.x0 = 0;
-        }
-
-        if (hdouble) {
-            matrix.yy = 2;
-            if (hbothalf) {
-                matrix.y0 = -(y+h);
-            } else {
-                matrix.y0 = -y;
-            }
-        } else {
-            matrix.yy = 1;
-            matrix.y0 = 0;
-        }
-        cairo_transform(inst->uctx.u.cairo.cr, &matrix);
+        cairo_save(inst->uctx.u.cairo.cr);
+        cairo_translate(inst->uctx.u.cairo.cr,
+                        -x * wdouble, -y * hdouble - h * hbothalf);
+        cairo_scale(inst->uctx.u.cairo.cr, 1 + wdouble, 1 + hdouble);
     }
 #endif
 }
@@ -3887,10 +3864,8 @@ static void draw_stretch_after(GtkFrontend *inst, int x, int y,
 #endif
 #endif /* DRAW_TEXT_GDK */
 #ifdef DRAW_TEXT_CAIRO
-    if (inst->uctx.type == DRAWTYPE_CAIRO) {
-        cairo_set_matrix(inst->uctx.u.cairo.cr,
-                         &inst->uctx.u.cairo.origmatrix);
-    }
+    if (inst->uctx.type == DRAWTYPE_CAIRO)
+        cairo_restore(inst->uctx.u.cairo.cr);
 #endif
 }
 
