@@ -643,11 +643,13 @@ static void x11font_cairo_init_gc(x11font_individual *xfi, Display *disp,
     if (xfi->gc == None) {
         XGCValues gcvals;
 
+        gcvals.function = GXclear;
         gcvals.foreground = 1;
         gcvals.background = 0;
         gcvals.font = xfi->xfs->fid;
         xfi->gc = XCreateGC(disp, pixmap,
-                            GCForeground | GCBackground | GCFont, &gcvals);
+                            GCFunction | GCForeground | GCBackground | GCFont,
+                            &gcvals);
     }
 }
 
@@ -670,6 +672,7 @@ static void x11font_cairo_draw_16(
         pixmap = XCreatePixmap(disp, GDK_DRAWABLE_XID(widgetwin),
                                pixwidth, pixheight, 1);
         x11font_cairo_init_gc(xfi, disp, pixmap);
+        XFillRectangle(disp, pixmap, xfi->gc, 0, 0, pixwidth, pixheight);
         XDrawImageString16(disp, pixmap, xfi->gc,
                            -bounds.lbearing, bounds.ascent,
                            string+start, length);
@@ -709,6 +712,7 @@ static void x11font_cairo_draw_8(
         pixmap = XCreatePixmap(disp, GDK_DRAWABLE_XID(widgetwin),
                                pixwidth, pixheight, 1);
         x11font_cairo_init_gc(xfi, disp, pixmap);
+        XFillRectangle(disp, pixmap, xfi->gc, 0, 0, pixwidth, pixheight);
         XDrawImageString(disp, pixmap, xfi->gc,
                          -bounds.lbearing, bounds.ascent,
                          string+start, length);
