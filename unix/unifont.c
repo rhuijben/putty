@@ -641,12 +641,13 @@ static void x11font_cairo_init_gc(x11font_individual *xfi, Display *disp,
                                   Pixmap pixmap)
 {
     if (xfi->gc == None) {
-        XGCValues gcvals;
+        XGCValues gcvals = {
+            .function = GXclear,
+            .foreground = 1,
+            .background = 0,
+            .font = xfi->xfs->fid,
+        };
 
-        gcvals.function = GXclear;
-        gcvals.foreground = 1;
-        gcvals.background = 0;
-        gcvals.font = xfi->xfs->fid;
         xfi->gc = XCreateGC(disp, pixmap,
                             GCFunction | GCForeground | GCBackground | GCFont,
                             &gcvals);
