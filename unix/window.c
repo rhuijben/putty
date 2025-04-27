@@ -756,10 +756,11 @@ static void drawing_area_setup(GtkFrontend *inst, int width, int height)
     new_scale = 1;
 #endif
 
-    int new_backing_w = width * new_scale;
-    int new_backing_h = height * new_scale;
+    int new_backing_w = width;
+    int new_backing_h = height;
 
-    if (inst->backing_w != new_backing_w || inst->backing_h != new_backing_h)
+    if (inst->backing_w != new_backing_w || inst->backing_h != new_backing_h
+        || inst->scale != new_scale)
         inst->drawing_area_setup_needed = true;
 
     /*
@@ -950,38 +951,8 @@ static gint draw_area(GtkWidget *widget, cairo_t *cr, gpointer data)
      * inst->surface to the window.
      */
     if (inst->surface) {
-        cairo_surface_t *target_surface;
-        double orig_sx, orig_sy;
-        cairo_matrix_t m;
-
-        /*
-         * Furtle around in the Cairo setup to force the device scale
-         * back to 1, so that when we blit a collection of pixels from
-         * our backing surface into the window, they really are
-         * _pixels_ and not some confusing antialiased slightly-offset
-         * 2x2 rectangle of pixeloids.
-         *
-         * I have no idea whether GTK expects me not to mess with the
-         * device scale in the cairo_surface_t backing its window, so
-         * I carefully put it back when I've finished.
-         *
-         * In some GTK setups, the Cairo context we're given may not
-         * have a zero translation offset in its matrix, in which case
-         * we have to adjust that to compensate for the change of
-         * scale, or else the old translation offset (designed for the
-         * old scale) will be multiplied by the new scale instead and
-         * put everything in the wrong place.
-         */
-        target_surface = cairo_get_target(cr);
-        cairo_get_matrix(cr, &m);
-        cairo_surface_get_device_scale(target_surface, &orig_sx, &orig_sy);
-        cairo_surface_set_device_scale(target_surface, 1.0, 1.0);
-        cairo_translate(cr, m.x0 * (orig_sx - 1.0), m.y0 * (orig_sy - 1.0));
-
         cairo_set_source_surface(cr, inst->surface, 0, 0);
         cairo_paint(cr);
-
-        cairo_surface_set_device_scale(target_surface, orig_sx, orig_sy);
     }
 
     return true;
@@ -3592,7 +3563,6 @@ static bool gtkwin_setup_draw_ctx(TermWin *tw)
 #else
         inst->uctx.u.cairo.cr = gdk_cairo_create(inst->pixmap);
 #endif
-        cairo_scale(inst->uctx.u.cairo.cr, inst->scale, inst->scale);
         cairo_setup_draw_ctx(inst);
     }
 #endif
