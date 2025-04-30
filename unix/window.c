@@ -979,7 +979,7 @@ gint expose_area(GtkWidget *widget, GdkEventExpose *event, gpointer data)
     }
 #else
     /*
-     * Failing that, draw from the client-side Cairo surface. (We
+     * Failing that, draw from the backing Cairo surface. (We
      * should never be compiled in a context where we have _neither_
      * inst->surface nor inst->pixmap.)
      */
