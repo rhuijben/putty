@@ -953,6 +953,7 @@ static gint draw_area(GtkWidget *widget, cairo_t *cr, gpointer data)
     if (inst->surface) {
         cairo_set_source_surface(cr, inst->surface, 0, 0);
         cairo_paint(cr);
+        cairo_surface_flush(cairo_get_target(cr));
     }
 
     return true;
