@@ -5329,7 +5329,7 @@ void new_session_window(Conf *conf, const char *geometry_string)
 
     inst->area = gtk_drawing_area_new();
     gtk_widget_set_name(GTK_WIDGET(inst->area), "drawing-area");
-#if !GTK_CHECK_VERSION(3,0,0)
+#if GTK_CHECK_VERSION(2,0,0) && !GTK_CHECK_VERSION(3,0,0)
     /*
      * PuTTY does its own double-buffering, so we don't really need
      * GTK to do it as well.  GTK documentation says this is probably
