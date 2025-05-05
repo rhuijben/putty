@@ -554,10 +554,11 @@ static bool x11font_has_glyph(unifont *font, wchar_t glyph)
     if (xfont->sixteen_bit) {
         /*
          * This X font has 16-bit character indices, which means
-         * we can directly use our Unicode input value.
+         * we can directly use our Unicode input value as long as
+         * it's in the BMP.
          */
-        return x11_font_has_glyph(xfont->fonts[0].xfs,
-                                  glyph >> 8, glyph & 0xFF);
+        return glyph < 0x10000 &&
+            x11_font_has_glyph(xfont->fonts[0].xfs, glyph >> 8, glyph & 0xFF);
     } else {
         /*
          * This X font has 8-bit indices, so we must convert to the
@@ -790,6 +791,8 @@ static void x11font_draw_text(unifont_drawctx *ctx, unifont *font,
         xcslen = len;
         xcs = snewn(xcslen, XChar2b);
         for (i = 0; i < xcslen; i++) {
+            /* We shouldn't see any character not in the font. */
+            assert(string[i] < 0x10000);
             xcs[i].byte1 = string[i] >> 8;
             xcs[i].byte2 = string[i];
         }
