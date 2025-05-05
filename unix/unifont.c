@@ -29,6 +29,8 @@
 #ifndef NOT_X_WINDOWS
 #ifdef DRAW_TEXT_CAIRO
 #include <cairo-xlib.h>
+#include <cairo-xlib-xrender.h>
+#include <X11/extensions/Xrender.h>
 #endif
 #include <gdk/gdkx.h>
 #include <X11/Xlib.h>
@@ -154,6 +156,7 @@ typedef struct x11font_individual {
     bool allocated;
 
 #ifdef DRAW_TEXT_CAIRO
+    XRenderPictFormat *pictformat;
     GC gc;
 #endif
 
@@ -607,7 +610,26 @@ static void x11font_gdk_draw(unifont_drawctx *ctx, x11font_individual *xfi,
 static void x11font_cairo_setup(
     unifont_drawctx *ctx, x11font_individual *xfi, Display *disp)
 {
-
+    /*
+     * To render X fonts under Cairo, we use the usual X font rendering
+     * requests to draw text into a pixmap, make a Cairo surface out
+     * of it, and then use that as a mask to paint the current colour
+     * into the terminal surface.  This means that colours are
+     * entirely in the hands of Cairo and we don't have to think about
+     * X colourmaps.  But we do need to be able to create that pixmap.
+     *
+     * All X servers are required to support 1bpp pixmaps, and Cairo
+     * can always use one of them as a mask.  But on 2025's X servers,
+     * 1bpp font rendering is unaccelerated and hence much slower than
+     * on deeper drawables.  So we find out if we can make an 8-bit
+     * alpha-only surface, and only fall back to a 1bpp pixmap if that
+     * fails.
+     *
+     * XRenderFindStandardFormat() will return NULL if the X Rendering
+     * Extension is missing or unusable, so we don't need to check
+     * that in advance.
+     */
+    xfi->pictformat = XRenderFindStandardFormat(disp, PictStandardA8);
 }
 
 /*
@@ -621,7 +643,7 @@ static void x11font_cairo_init_gc(x11font_individual *xfi, Display *disp,
     if (xfi->gc == None) {
         XGCValues gcvals = {
             .function = GXclear,
-            .foreground = 1,
+            .foreground = 0xffffffff,
             .background = 0,
             .font = xfi->xfs->fid,
         };
@@ -646,17 +668,27 @@ static void x11font_cairo_draw(
                    &direction, &font_ascent, &font_descent, &bounds);
     pixwidth = bounds.rbearing - bounds.lbearing;
     pixheight = bounds.ascent + bounds.descent;
-     if (pixwidth > 0 && pixheight > 0) {
-        pixmap = XCreatePixmap(disp, GDK_DRAWABLE_XID(widgetwin),
-                               pixwidth, pixheight, 1);
+    if (pixwidth > 0 && pixheight > 0) {
+        cairo_surface_t *surface;
+        if (xfi->pictformat != NULL) {
+            pixmap = XCreatePixmap(disp, GDK_DRAWABLE_XID(widgetwin),
+                                   pixwidth, pixheight, 8);
+            surface = cairo_xlib_surface_create_with_xrender_format(
+                disp, pixmap, ScreenOfDisplay(disp, widgetscr),
+                xfi->pictformat, pixwidth, pixheight);
+        } else {
+            pixmap = XCreatePixmap(disp, GDK_DRAWABLE_XID(widgetwin),
+                                   pixwidth, pixheight, 1);
+            surface = cairo_xlib_surface_create_for_bitmap(
+                disp, pixmap, ScreenOfDisplay(disp, widgetscr),
+                pixwidth, pixheight);
+        }
         x11font_cairo_init_gc(xfi, disp, pixmap);
         XFillRectangle(disp, pixmap, xfi->gc, 0, 0, pixwidth, pixheight);
         XDrawImageString16(disp, pixmap, xfi->gc,
                            -bounds.lbearing, bounds.ascent,
                            string+start, length);
-        cairo_surface_t *surface = cairo_xlib_surface_create_for_bitmap(
-            disp, pixmap, ScreenOfDisplay(disp, widgetscr),
-            pixwidth, pixheight);
+        cairo_surface_mark_dirty(surface);
         cairo_pattern_t *pattern = cairo_pattern_create_for_surface(surface);
         /* We really don't want bilinear interpolation of bitmap fonts. */
         cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
