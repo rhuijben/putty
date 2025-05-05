@@ -173,7 +173,8 @@ struct x11font {
     /*
      * `sixteen_bit' is true iff the font object is indexed by
      * values larger than a byte. That is, this flag tells us
-     * whether we use XDrawString or XDrawString16, etc.
+     * whether the font is encoded in Unicode. If not, we need
+     * to translate text into the font character set.
      */
     bool sixteen_bit;
     /*
@@ -329,16 +330,10 @@ static char *x11_guess_derived_font_name(Display *disp, XFontStruct *xfs,
     return NULL;
 }
 
-static int x11_font_width(XFontStruct *xfs, bool sixteen_bit)
+static int x11_font_width(XFontStruct *xfs)
 {
-    if (sixteen_bit) {
-        XChar2b space;
-        space.byte1 = 0;
-        space.byte2 = '0';
-        return XTextWidth16(xfs, &space, 1);
-    } else {
-        return XTextWidth(xfs, "0", 1);
-    }
+    XChar2b space = { 0, '0' };
+    return XTextWidth16(xfs, &space, 1);
 }
 
 static const XCharStruct *x11_char_struct(
@@ -488,7 +483,7 @@ static unifont *x11font_create(GtkWidget *widget, const char *name,
 
     xfont = snew(struct x11font);
     xfont->u.vt = &x11font_vtable;
-    xfont->u.width = x11_font_width(xfs, sixteen_bit);
+    xfont->u.width = x11_font_width(xfs);
     xfont->u.ascent = xfs->ascent;
     xfont->u.descent = xfs->descent;
     xfont->u.height = xfont->u.ascent + xfont->u.descent;
@@ -585,18 +580,10 @@ static bool x11font_has_glyph(unifont *font, wchar_t glyph)
 #define GDK_DRAWABLE_XID(d) GDK_WINDOW_XID(d) /* GTK3's name for this */
 #endif
 
-static int x11font_width_16(unifont_drawctx *ctx, x11font_individual *xfi,
-                            const void *vstring, int start, int length)
+static int x11font_width(unifont_drawctx *ctx, x11font_individual *xfi,
+                         const XChar2b *string, int start, int length)
 {
-    const XChar2b *string = (const XChar2b *)vstring;
     return XTextWidth16(xfi->xfs, string+start, length);
-}
-
-static int x11font_width_8(unifont_drawctx *ctx, x11font_individual *xfi,
-                           const void *vstring, int start, int length)
-{
-    const char *string = (const char *)vstring;
-    return XTextWidth(xfi->xfs, string+start, length);
 }
 
 #ifdef DRAW_TEXT_GDK
@@ -606,22 +593,12 @@ static void x11font_gdk_setup(unifont_drawctx *ctx, x11font_individual *xfi,
     XSetFont(disp, GDK_GC_XGC(ctx->u.gdk.gc), xfi->xfs->fid);
 }
 
-static void x11font_gdk_draw_16(unifont_drawctx *ctx, x11font_individual *xfi,
-                                Display *disp, int x, int y,
-                                const void *vstring, int start, int length)
+static void x11font_gdk_draw(unifont_drawctx *ctx, x11font_individual *xfi,
+                             Display *disp, int x, int y,
+                             const XChar2b *string, int start, int length)
 {
-    const XChar2b *string = (const XChar2b *)vstring;
     XDrawString16(disp, GDK_DRAWABLE_XID(ctx->u.gdk.target),
                   GDK_GC_XGC(ctx->u.gdk.gc), x, y, string+start, length);
-}
-
-static void x11font_gdk_draw_8(unifont_drawctx *ctx, x11font_individual *xfi,
-                               Display *disp, int x, int y,
-                               const void *vstring, int start, int length)
-{
-    const char *string = (const char *)vstring;
-    XDrawString(disp, GDK_DRAWABLE_XID(ctx->u.gdk.target),
-                GDK_GC_XGC(ctx->u.gdk.gc), x, y, string+start, length);
 }
 #endif
 
@@ -654,11 +631,10 @@ static void x11font_cairo_init_gc(x11font_individual *xfi, Display *disp,
     }
 }
 
-static void x11font_cairo_draw_16(
+static void x11font_cairo_draw(
     unifont_drawctx *ctx, x11font_individual *xfi, Display *disp,
-    int x, int y, const void *vstring, int start, int length)
+    int x, int y, const XChar2b *string, int start, int length)
 {
-    const XChar2b *string = (const XChar2b *)vstring + start;
     GdkWindow *widgetwin = gtk_widget_get_window(ctx->u.cairo.widget);
     int widgetscr = GDK_SCREEN_XNUMBER(gdk_window_get_screen(widgetwin));
     XCharStruct bounds;
@@ -693,88 +669,35 @@ static void x11font_cairo_draw_16(
         XFreePixmap(disp, pixmap);
     }
 }
-
-static void x11font_cairo_draw_8(
-    unifont_drawctx *ctx, x11font_individual *xfi, Display *disp,
-    int x, int y, const void *vstring, int start, int length)
-{
-    const char *string = (const char *)vstring + start;
-    GdkWindow *widgetwin = gtk_widget_get_window(ctx->u.cairo.widget);
-    int widgetscr = GDK_SCREEN_XNUMBER(gdk_window_get_screen(widgetwin));
-    XCharStruct bounds;
-    int pixwidth, pixheight, direction, font_ascent, font_descent;
-    Pixmap pixmap;
-
-    XTextExtents(xfi->xfs, string + start, length,
-                 &direction, &font_ascent, &font_descent, &bounds);
-    pixwidth = bounds.rbearing - bounds.lbearing;
-    pixheight = bounds.ascent + bounds.descent;
-     if (pixwidth > 0 && pixheight > 0) {
-        pixmap = XCreatePixmap(disp, GDK_DRAWABLE_XID(widgetwin),
-                               pixwidth, pixheight, 1);
-        x11font_cairo_init_gc(xfi, disp, pixmap);
-        XFillRectangle(disp, pixmap, xfi->gc, 0, 0, pixwidth, pixheight);
-        XDrawImageString(disp, pixmap, xfi->gc,
-                         -bounds.lbearing, bounds.ascent,
-                         string+start, length);
-        cairo_surface_t *surface = cairo_xlib_surface_create_for_bitmap(
-            disp, pixmap, ScreenOfDisplay(disp, widgetscr),
-            pixwidth, pixheight);
-        cairo_pattern_t *pattern = cairo_pattern_create_for_surface(surface);
-        /* We really don't want bilinear interpolation of bitmap fonts. */
-        cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
-        cairo_matrix_t xfrm;
-        cairo_matrix_init_translate(&xfrm,
-                                    -x - bounds.lbearing, -y + bounds.ascent);
-        cairo_pattern_set_matrix(pattern, &xfrm);
-        cairo_mask(ctx->u.cairo.cr, pattern);
-        cairo_pattern_destroy(pattern);
-        cairo_surface_destroy(surface);
-        XFreePixmap(disp, pixmap);
-    }
-}
 #endif /* DRAW_TEXT_CAIRO */
 
 struct x11font_drawfuncs {
     int (*width)(unifont_drawctx *ctx, x11font_individual *xfi,
-                 const void *vstring, int start, int length);
+                 const XChar2b *string, int start, int length);
     void (*setup)(unifont_drawctx *ctx, x11font_individual *xfi,
                   Display *disp);
     void (*draw)(unifont_drawctx *ctx, x11font_individual *xfi, Display *disp,
-                 int x, int y, const void *vstring, int start, int length);
+                 int x, int y, const XChar2b *string, int start, int length);
 };
 
 /*
- * This array has two entries per compiled-in drawtype; of each pair,
- * the first is for an 8-bit font and the second for 16-bit.
+ * This array has one entry per compiled-in drawtype.
  */
-static const struct x11font_drawfuncs x11font_drawfuncs[2*DRAWTYPE_NTYPES] = {
+static const struct x11font_drawfuncs x11font_drawfuncs[DRAWTYPE_NTYPES] = {
 #ifdef DRAW_TEXT_GDK
-    /* gdk, 8-bit */
+    /* gdk */
     {
-        x11font_width_8,
+        x11font_width,
         x11font_gdk_setup,
-        x11font_gdk_draw_8,
-    },
-    /* gdk, 16-bit */
-    {
-        x11font_width_16,
-        x11font_gdk_setup,
-        x11font_gdk_draw_16,
+        x11font_gdk_draw,
     },
 #endif
 #ifdef DRAW_TEXT_CAIRO
-    /* cairo, 8-bit */
+    /* cairo */
     {
-        x11font_width_8,
+        x11font_width,
         x11font_cairo_setup,
-        x11font_cairo_draw_8,
-    },
-    /* [3] cairo, 16-bit */
-    {
-        x11font_width_16,
-        x11font_cairo_setup,
-        x11font_cairo_draw_16,
+        x11font_cairo_draw,
     },
 #endif
 };
@@ -830,7 +753,7 @@ static void x11font_draw_text(unifont_drawctx *ctx, unifont *font,
     int sfid;
     int shadowoffset = 0;
     int mult = (wide ? 2 : 1);
-    int index = 2 * (int)ctx->type;
+    int index = (int)ctx->type;
 
     wide = wide && !xfont->wide;
     bold = bold && !xfont->bold;
@@ -857,25 +780,19 @@ static void x11font_draw_text(unifont_drawctx *ctx, unifont *font,
     if (!xfont->fonts[sfid].xfs)
         return;                        /* we've tried our best, but no luck */
 
+    XChar2b *xcs;
+    int i, xcslen;
     if (xfont->sixteen_bit) {
         /*
          * This X font has 16-bit character indices, which means
          * we can directly use our Unicode input string.
          */
-        XChar2b *xcs;
-        int i;
-
-        xcs = snewn(len, XChar2b);
-        for (i = 0; i < len; i++) {
+        xcslen = len;
+        xcs = snewn(xcslen, XChar2b);
+        for (i = 0; i < xcslen; i++) {
             xcs[i].byte1 = string[i] >> 8;
             xcs[i].byte2 = string[i];
         }
-
-        x11font_really_draw_text(x11font_drawfuncs + index + 1, ctx,
-                                 &xfont->fonts[sfid], xfont->disp, x, y,
-                                 xcs, len, shadowoffset,
-                                 xfont->variable, cellwidth * mult);
-        sfree(xcs);
     } else {
         /*
          * This X font has 8-bit indices, so we must convert to the
@@ -883,12 +800,19 @@ static void x11font_draw_text(unifont_drawctx *ctx, unifont *font,
          */
         strbuf *sb = strbuf_new();
         put_wc_to_mb(sb, xfont->real_charset, string, len, ".");
-        x11font_really_draw_text(x11font_drawfuncs + index + 0, ctx,
-                                 &xfont->fonts[sfid], xfont->disp, x, y,
-                                 sb->s, sb->len, shadowoffset,
-                                 xfont->variable, cellwidth * mult);
+        xcslen = sb->len;
+        xcs = snewn(xcslen, XChar2b);
+        for (i = 0; i < xcslen; i++) {
+            xcs[i].byte1 = 0;
+            xcs[i].byte2 = sb->s[i];
+        }
         strbuf_free(sb);
     }
+    x11font_really_draw_text(x11font_drawfuncs + index, ctx,
+                             &xfont->fonts[sfid], xfont->disp, x, y,
+                             xcs, xcslen, shadowoffset,
+                             xfont->variable, cellwidth * mult);
+    sfree(xcs);
 }
 
 static void x11font_draw_combining(unifont_drawctx *ctx, unifont *font,
