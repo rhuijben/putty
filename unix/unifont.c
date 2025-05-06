@@ -686,16 +686,10 @@ static void x11font_cairo_ensure_pixmap(
         xfi->pattern = cairo_pattern_create_for_surface(xfi->surface);
         /* We really don't want bilinear interpolation of bitmap fonts. */
         cairo_pattern_set_filter(xfi->pattern, CAIRO_FILTER_NEAREST);
-        XGCValues gcvals = {
-            .function = GXclear,
-            .foreground = 0xffffffff,
-            .background = 0,
-            .font = xfi->xfs->fid,
-        };
-        xfi->gc = XCreateGC(disp, newpixmap,
-                            GCFunction | GCForeground | GCBackground | GCFont,
-                            &gcvals);
+        XGCValues gcvals = { .font = xfi->xfs->fid };
+        xfi->gc = XCreateGC(disp, newpixmap, GCFont, &gcvals);
     }
+    XSetFunction(disp, xfi->gc, GXclear);
     XFillRectangle(disp, newpixmap, xfi->gc, 0, 0, width, height);
     xfi->pixmap = newpixmap;
     xfi->pixwidth = width;
@@ -715,7 +709,8 @@ static void x11font_cairo_draw(
     pixheight = bounds.ascent + bounds.descent;
     if (pixwidth > 0 && pixheight > 0) {
         x11font_cairo_ensure_pixmap(ctx, xfi, disp, pixwidth, pixheight);
-        XDrawImageString16(disp, xfi->pixmap, xfi->gc,
+        XSetFunction(disp, xfi->gc, GXset);
+        XDrawString16(disp, xfi->pixmap, xfi->gc,
                            -bounds.lbearing, bounds.ascent,
                            string+start, length);
         cairo_surface_mark_dirty(xfi->surface);
@@ -725,6 +720,7 @@ static void x11font_cairo_draw(
         cairo_pattern_set_matrix(xfi->pattern, &xfrm);
         cairo_mask(ctx->u.cairo.cr, xfi->pattern);
         /* Clear the part of the pixmap that we used. */
+        XSetFunction(disp, xfi->gc, GXclear);
         XFillRectangle(disp, xfi->pixmap, xfi->gc, 0, 0, pixwidth, pixheight);
     }
 }
