@@ -492,14 +492,14 @@ static void proxy_http_process_queue(ProxyNegotiator *pn)
         if (s->http_status == 407) {
             /*
              * If this is going to be an auth request, we expect to
-             * see at least one Proxy-Authorization header offering us
+             * see at least one Proxy-Authenticate header offering us
              * auth options. Start by preloading s->next_auth with a
              * fallback error message, which will be used if nothing
              * better is available.
              */
             http_auth_details_free(s->next_auth);
             s->next_auth = http_auth_details_new();
-            auth_error(s->next_auth, "no Proxy-Authorization header seen in "
+            auth_error(s->next_auth, "no Proxy-Authenticate header seen in "
                        "HTTP 407 Proxy Authentication Required response");
         }
 
