@@ -60,7 +60,14 @@ static bool callback_is_for_socket(
         return false;
     struct wm_netevent_params *params =
         (struct wm_netevent_params *)callback_ctx;
-    return params->wParam == (WPARAM)(uintptr_t)predicate_ctx;
+    if (params->wParam != (WPARAM)(uintptr_t)predicate_ctx)
+        return false;
+
+    /* The 'struct wm_netevent_params' would have been freed by the
+     * callback function wm_netevent_callback(). Now that isn't going
+     * to run, so we must free it ourself. */
+    sfree(callback_ctx);
+    return true;
 }
 
 void done_with_socket(SOCKET skt)
