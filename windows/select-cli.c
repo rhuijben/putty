@@ -45,10 +45,6 @@ SOCKET winselcli_unique_socket(void)
     return *p;
 }
 
-void done_with_socket(SOCKET skt)
-{
-}
-
 const char *do_select(SOCKET skt, bool enable)
 {
     /* Check everything's been set up, for convenience of callers. */
